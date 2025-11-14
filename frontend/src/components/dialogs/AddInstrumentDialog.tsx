@@ -43,9 +43,8 @@ export function AddInstrumentDialog({ isOpen, onClose, onAdd }: AddInstrumentDia
   if (!isOpen) return null;
 
   return (
-    <>
-      <div className="dialog-overlay" onClick={onClose} />
-      <div className="dialog-content">
+    <div className="dialog-overlay" onClick={onClose}>
+      <div className="dialog-content" onClick={(e) => e.stopPropagation()}>
         <h2>Добавить инструмент</h2>
 
         <input
@@ -71,6 +70,6 @@ export function AddInstrumentDialog({ isOpen, onClose, onAdd }: AddInstrumentDia
           </button>
         </div>
       </div>
-    </>
+    </div>
   );
 }
