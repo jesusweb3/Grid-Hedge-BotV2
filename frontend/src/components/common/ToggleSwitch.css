@@ -1,0 +1,37 @@
+.toggle-switch {
+  position: relative;
+  width: 50px;
+  height: 26px;
+  background-color: #555555;
+  border-radius: 13px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  padding: 0;
+  margin: 0;
+}
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: left 0.3s ease;
+}
+
+.toggle-switch.checked {
+  background-color: #4cb050;
+}
+
+.toggle-switch.checked::after {
+  left: 26px;
+}
+
+.toggle-switch:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
