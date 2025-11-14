@@ -12,12 +12,8 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
   const updateInstrument = useInstrumentStore((state) => state.updateInstrument);
 
   if (!instrument) {
-    return (
-      <div className="instrument-card empty">
-        <p>Выберите инструмент из списка</p>
-      </div>
-    );
-  }
+  return <div className="instrument-card empty" />;
+}
 
   const handleActivityToggle = (checked: boolean) => {
     updateInstrument(instrument.symbol, { isActive: checked });
