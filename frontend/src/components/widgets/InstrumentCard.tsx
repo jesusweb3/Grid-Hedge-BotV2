@@ -12,8 +12,8 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
   const updateInstrument = useInstrumentStore((state) => state.updateInstrument);
 
   if (!instrument) {
-  return <div className="instrument-card empty" />;
-}
+    return <div className="instrument-card empty">Выберите инструмент</div>;
+  }
 
   const handleActivityToggle = (checked: boolean) => {
     updateInstrument(instrument.symbol, { isActive: checked });
@@ -74,7 +74,7 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
   return (
     <div className="instrument-card">
       <div className="card-header">
-        <h2>Актив: {instrument.symbol}</h2>
+        <h2>{instrument.symbol}</h2>
         <ToggleSwitch
           checked={instrument.isActive}
           onChange={handleActivityToggle}
@@ -83,38 +83,43 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
       </div>
 
       <div className="card-content">
+        {/* Настройки позиции */}
         <section className="section">
-          <h3>Настройки позиции</h3>
-          <div className="form-group">
-            <label>Цена входа (USDT)</label>
-            <input
-              type="number"
-              value={instrument.entryPriceUsdt}
-              onChange={(e) => handleEntryPriceChange(Number(e.target.value))}
-              step={instrument.tickSize}
-              disabled={instrument.isActive}
-            />
-          </div>
-          <div className="form-group">
-            <label>Объём входа (USDT)</label>
-            <input
-              type="number"
-              value={instrument.entryVolumeUsdt}
-              onChange={(e) => handleEntryVolumeChange(Number(e.target.value))}
-              step="0.01"
-              disabled={instrument.isActive}
-            />
+          <h3>Позиция</h3>
+          <div className="row">
+            <div className="form-group">
+              <label>Цена входа</label>
+              <input
+                type="number"
+                value={instrument.entryPriceUsdt}
+                onChange={(e) => handleEntryPriceChange(Number(e.target.value))}
+                step={instrument.tickSize}
+                disabled={instrument.isActive}
+              />
+            </div>
+            <div className="form-group">
+              <label>Объём входа</label>
+              <input
+                type="number"
+                value={instrument.entryVolumeUsdt}
+                onChange={(e) => handleEntryVolumeChange(Number(e.target.value))}
+                step="0.01"
+                disabled={instrument.isActive}
+              />
+            </div>
           </div>
         </section>
 
-        <div className="row">
-          <section className="section flex1">
+        {/* TP и SL в 2 колонки */}
+        <div className="tp-sl-wrapper">
+          {/* Take Profit */}
+          <div className="tp-block">
             <h3>Take Profit</h3>
 
             <div className="tp-level">
               <h4>TP1</h4>
               <div className="form-group">
-                <label>Шаг (USDT)</label>
+                <label>Шаг</label>
                 <input
                   type="number"
                   value={instrument.tpLevels[0].stepUsdt}
@@ -124,7 +129,7 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
                 />
               </div>
               <div className="form-group">
-                <label>Объём (%)</label>
+                <label>Объём %</label>
                 <input
                   type="number"
                   value={instrument.tpLevels[0].volumePercent}
@@ -140,7 +145,7 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
             <div className="tp-level">
               <h4>TP2</h4>
               <div className="form-group">
-                <label>Шаг (USDT)</label>
+                <label>Шаг</label>
                 <input
                   type="number"
                   value={instrument.tpLevels[1].stepUsdt}
@@ -150,7 +155,7 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
                 />
               </div>
               <div className="form-group">
-                <label>Объём (%)</label>
+                <label>Объём %</label>
                 <input
                   type="number"
                   value={instrument.tpLevels[1].volumePercent}
@@ -162,15 +167,16 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
                 />
               </div>
             </div>
-          </section>
+          </div>
 
-          <section className="section flex1">
+          {/* Stop Loss */}
+          <div className="sl-block">
             <h3>Stop Loss</h3>
 
             <div className="sl-side">
               <h4>Long</h4>
               <div className="form-group">
-                <label>Количество (макс 10)</label>
+                <label>Кол-во</label>
                 <input
                   type="number"
                   value={instrument.slLong.count}
@@ -181,7 +187,7 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
                 />
               </div>
               <div className="form-group">
-                <label>Шаг (USDT)</label>
+                <label>Шаг</label>
                 <input
                   type="number"
                   value={instrument.slLong.stepUsdt}
@@ -195,7 +201,7 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
             <div className="sl-side">
               <h4>Short</h4>
               <div className="form-group">
-                <label>Количество (макс 10)</label>
+                <label>Кол-во</label>
                 <input
                   type="number"
                   value={instrument.slShort.count}
@@ -206,7 +212,7 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
                 />
               </div>
               <div className="form-group">
-                <label>Шаг (USDT)</label>
+                <label>Шаг</label>
                 <input
                   type="number"
                   value={instrument.slShort.stepUsdt}
@@ -216,10 +222,11 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
                 />
               </div>
             </div>
-          </section>
+          </div>
         </div>
 
-        <section className="section">
+        {/* Доливка */}
+        <div className="refill-section">
           <h3>Доливка</h3>
           <div className="form-group">
             <label>
@@ -233,76 +240,71 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
                 }
                 disabled={instrument.isActive}
               />
-              Включить доливку
+              Включить
             </label>
           </div>
 
           {instrument.refill.enabled && (
-            <>
-              <div className="row">
-                <div className="form-group flex1">
-                  <label>Long цена (USDT)</label>
-                  <input
-                    type="number"
-                    value={instrument.refill.longPriceUsdt}
-                    onChange={(e) =>
-                      updateInstrument(instrument.symbol, {
-                        refill: { ...instrument.refill, longPriceUsdt: Number(e.target.value) },
-                      })
-                    }
-                    step={instrument.tickSize}
-                    disabled={instrument.isActive}
-                  />
-                </div>
-                <div className="form-group flex1">
-                  <label>Long объём (USDT)</label>
-                  <input
-                    type="number"
-                    value={instrument.refill.longVolumeUsdt}
-                    onChange={(e) =>
-                      updateInstrument(instrument.symbol, {
-                        refill: { ...instrument.refill, longVolumeUsdt: Number(e.target.value) },
-                      })
-                    }
-                    step="0.01"
-                    disabled={instrument.isActive}
-                  />
-                </div>
+            <div className="refill-grid">
+              <div className="form-group">
+                <label>Long цена</label>
+                <input
+                  type="number"
+                  value={instrument.refill.longPriceUsdt}
+                  onChange={(e) =>
+                    updateInstrument(instrument.symbol, {
+                      refill: { ...instrument.refill, longPriceUsdt: Number(e.target.value) },
+                    })
+                  }
+                  step={instrument.tickSize}
+                  disabled={instrument.isActive}
+                />
               </div>
-
-              <div className="row">
-                <div className="form-group flex1">
-                  <label>Short цена (USDT)</label>
-                  <input
-                    type="number"
-                    value={instrument.refill.shortPriceUsdt}
-                    onChange={(e) =>
-                      updateInstrument(instrument.symbol, {
-                        refill: { ...instrument.refill, shortPriceUsdt: Number(e.target.value) },
-                      })
-                    }
-                    step={instrument.tickSize}
-                    disabled={instrument.isActive}
-                  />
-                </div>
-                <div className="form-group flex1">
-                  <label>Short объём (USDT)</label>
-                  <input
-                    type="number"
-                    value={instrument.refill.shortVolumeUsdt}
-                    onChange={(e) =>
-                      updateInstrument(instrument.symbol, {
-                        refill: { ...instrument.refill, shortVolumeUsdt: Number(e.target.value) },
-                      })
-                    }
-                    step="0.01"
-                    disabled={instrument.isActive}
-                  />
-                </div>
+              <div className="form-group">
+                <label>Long объём</label>
+                <input
+                  type="number"
+                  value={instrument.refill.longVolumeUsdt}
+                  onChange={(e) =>
+                    updateInstrument(instrument.symbol, {
+                      refill: { ...instrument.refill, longVolumeUsdt: Number(e.target.value) },
+                    })
+                  }
+                  step="0.01"
+                  disabled={instrument.isActive}
+                />
               </div>
-            </>
+              <div className="form-group">
+                <label>Short цена</label>
+                <input
+                  type="number"
+                  value={instrument.refill.shortPriceUsdt}
+                  onChange={(e) =>
+                    updateInstrument(instrument.symbol, {
+                      refill: { ...instrument.refill, shortPriceUsdt: Number(e.target.value) },
+                    })
+                  }
+                  step={instrument.tickSize}
+                  disabled={instrument.isActive}
+                />
+              </div>
+              <div className="form-group">
+                <label>Short объём</label>
+                <input
+                  type="number"
+                  value={instrument.refill.shortVolumeUsdt}
+                  onChange={(e) =>
+                    updateInstrument(instrument.symbol, {
+                      refill: { ...instrument.refill, shortVolumeUsdt: Number(e.target.value) },
+                    })
+                  }
+                  step="0.01"
+                  disabled={instrument.isActive}
+                />
+              </div>
+            </div>
           )}
-        </section>
+        </div>
       </div>
     </div>
   );
