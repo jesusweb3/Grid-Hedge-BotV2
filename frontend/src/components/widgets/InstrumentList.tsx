@@ -49,9 +49,9 @@ export function InstrumentList({
                 <button
                   className="btn-delete"
                   onClick={(e) => handleDelete(e, instrument.symbol)}
-                  title="Удалить"
+                  title="Удалить инструмент"
                 >
-                  Удалить
+                  🗑
                 </button>
               </li>
             ))}

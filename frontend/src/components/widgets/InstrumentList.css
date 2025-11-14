@@ -49,16 +49,18 @@
   justify-content: space-between;
   padding: 12px;
   border-bottom: 1px solid #3c3c3c;
+  border-left: 3px solid transparent;
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
 .instrument-item:hover {
-  background-color: #3c3c3c;
+  background-color: #333333;
 }
 
 .instrument-item.active {
-  background-color: #007acc;
+  border-left-color: #007acc;
+  background-color: transparent;
 }
 
 .item-header {
@@ -93,16 +95,28 @@
 
 .btn-delete {
   background: transparent;
-  color: #ff4444;
+  color: #888888;
   border: none;
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: 1.2rem;
   padding: 4px 8px;
   border-radius: 3px;
-  transition: background-color 0.2s;
-  white-space: nowrap;
+  transition: all 0.2s;
+  display: none;
+  line-height: 1;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.instrument-item:hover .btn-delete {
+  display: flex;
+  color: #ff6b6b;
 }
 
 .btn-delete:hover {
-  background-color: rgba(255, 68, 68, 0.1);
+  background-color: rgba(255, 68, 68, 0.2);
+  color: #ff4444;
 }
