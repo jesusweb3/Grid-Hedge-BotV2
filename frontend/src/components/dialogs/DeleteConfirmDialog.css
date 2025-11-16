@@ -1,0 +1,92 @@
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.dialog-content {
+  background-color: #2b2b2b;
+  border: 1px solid #555555;
+  border-radius: 8px;
+  padding: 20px;
+  width: 85%;
+  max-width: 380px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dialog-content h2 {
+  margin: 0 0 16px 0;
+  font-size: 1.1rem;
+}
+
+.delete-dialog h2 {
+  color: #ff9999;
+}
+
+.delete-message {
+  color: #cccccc;
+  font-size: 0.95rem;
+  margin: 12px 0 20px 0;
+  line-height: 1.4;
+}
+
+.delete-message strong {
+  color: #ff9999;
+  font-weight: 600;
+}
+
+.dialog-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btn-cancel,
+.btn-delete-confirm {
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: 1px solid #555555;
+  background-color: #3c3c3c;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background-color 0.2s;
+}
+
+.btn-cancel:hover {
+  background-color: #454545;
+}
+
+.btn-delete-confirm {
+  background-color: #ff5555;
+  border-color: #ff5555;
+  color: #ffffff;
+}
+
+.btn-delete-confirm:hover {
+  background-color: #ff3333;
+  border-color: #ff3333;
+}
+
+.btn-delete-confirm:active {
+  background-color: #dd0000;
+}

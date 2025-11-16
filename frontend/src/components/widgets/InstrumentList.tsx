@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { useInstrumentStore } from '../../stores/useInstrumentStore';
+import { DeleteConfirmDialog } from '../dialogs/DeleteConfirmDialog';
 import './InstrumentList.css';
 
 interface InstrumentListProps {
@@ -12,13 +14,19 @@ export function InstrumentList({
   onAddClick,
   currentSymbol,
 }: InstrumentListProps) {
+  const [deleteConfirmSymbol, setDeleteConfirmSymbol] = useState<string | null>(null);
   const instruments = useInstrumentStore((state) => state.instruments);
   const removeInstrument = useInstrumentStore((state) => state.removeInstrument);
 
   const handleDelete = (e: React.MouseEvent, symbol: string) => {
     e.stopPropagation();
-    if (confirm(`Удалить инструмент ${symbol}?`)) {
-      removeInstrument(symbol);
+    setDeleteConfirmSymbol(symbol);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteConfirmSymbol) {
+      removeInstrument(deleteConfirmSymbol);
+      setDeleteConfirmSymbol(null);
     }
   };
 
@@ -58,6 +66,13 @@ export function InstrumentList({
           </ul>
         )}
       </div>
+
+      <DeleteConfirmDialog
+        isOpen={deleteConfirmSymbol !== null}
+        symbol={deleteConfirmSymbol || ''}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteConfirmSymbol(null)}
+      />
     </div>
   );
 }
