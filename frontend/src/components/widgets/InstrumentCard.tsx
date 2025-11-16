@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useInstrumentStore } from '../../stores/useInstrumentStore';
 import { ToggleSwitch } from '../common/ToggleSwitch';
 import { validateTpVolumes, validateSlCounts } from '../../utils/validation';
@@ -10,6 +11,18 @@ interface InstrumentCardProps {
 
 export function InstrumentCard({ instrument }: InstrumentCardProps) {
   const updateInstrument = useInstrumentStore((state) => state.updateInstrument);
+  
+  // Локальное состояние для редактирования TP объёмов
+  const [tp1VolumeEdit, setTp1VolumeEdit] = useState<string>('');
+  const [tp2VolumeEdit, setTp2VolumeEdit] = useState<string>('');
+
+  // Синхронизируем локальное состояние с инструментом
+  useEffect(() => {
+    if (instrument) {
+      setTp1VolumeEdit(instrument.tpLevels[0].volumePercent.toString());
+      setTp2VolumeEdit(instrument.tpLevels[1].volumePercent.toString());
+    }
+  }, [instrument?.symbol]);
 
   if (!instrument) {
     return <div className="instrument-card empty">Выберите инструмент</div>;
@@ -33,17 +46,46 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
     updateInstrument(instrument.symbol, { tpLevels: newTpLevels as [any, any] });
   };
 
-  const handleTpVolumeChange = (index: number, value: number) => {
+  const handleTp1VolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTp1VolumeEdit(e.target.value);
+  };
+
+  const handleTp2VolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTp2VolumeEdit(e.target.value);
+  };
+
+  const handleTp1VolumeBlur = () => {
+    const value = parseFloat(tp1VolumeEdit) || 0;
     const [tp1, tp2] = validateTpVolumes(
-      index === 0 ? value : instrument.tpLevels[0].volumePercent,
-      index === 1 ? value : instrument.tpLevels[1].volumePercent,
-      index === 0
+      value,
+      instrument.tpLevels[1].volumePercent,
+      true
     );
 
     const newTpLevels = [...instrument.tpLevels];
     newTpLevels[0] = { ...newTpLevels[0], volumePercent: tp1 };
     newTpLevels[1] = { ...newTpLevels[1], volumePercent: tp2 };
     updateInstrument(instrument.symbol, { tpLevels: newTpLevels as [any, any] });
+    
+    setTp1VolumeEdit(tp1.toString());
+    setTp2VolumeEdit(tp2.toString());
+  };
+
+  const handleTp2VolumeBlur = () => {
+    const value = parseFloat(tp2VolumeEdit) || 0;
+    const [tp1, tp2] = validateTpVolumes(
+      instrument.tpLevels[0].volumePercent,
+      value,
+      false
+    );
+
+    const newTpLevels = [...instrument.tpLevels];
+    newTpLevels[0] = { ...newTpLevels[0], volumePercent: tp1 };
+    newTpLevels[1] = { ...newTpLevels[1], volumePercent: tp2 };
+    updateInstrument(instrument.symbol, { tpLevels: newTpLevels as [any, any] });
+    
+    setTp1VolumeEdit(tp1.toString());
+    setTp2VolumeEdit(tp2.toString());
   };
 
   const handleSlCountChange = (side: 'long' | 'short', value: number) => {
@@ -132,8 +174,9 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
                 <label>Объём %</label>
                 <input
                   type="number"
-                  value={instrument.tpLevels[0].volumePercent}
-                  onChange={(e) => handleTpVolumeChange(0, Number(e.target.value))}
+                  value={tp1VolumeEdit}
+                  onChange={handleTp1VolumeChange}
+                  onBlur={handleTp1VolumeBlur}
                   min="1"
                   max="99"
                   step="0.1"
@@ -158,8 +201,9 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
                 <label>Объём %</label>
                 <input
                   type="number"
-                  value={instrument.tpLevels[1].volumePercent}
-                  onChange={(e) => handleTpVolumeChange(1, Number(e.target.value))}
+                  value={tp2VolumeEdit}
+                  onChange={handleTp2VolumeChange}
+                  onBlur={handleTp2VolumeBlur}
                   min="1"
                   max="99"
                   step="0.1"
