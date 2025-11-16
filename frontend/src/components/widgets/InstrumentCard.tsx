@@ -15,12 +15,18 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
   // Локальное состояние для редактирования TP объёмов
   const [tp1VolumeEdit, setTp1VolumeEdit] = useState<string>('');
   const [tp2VolumeEdit, setTp2VolumeEdit] = useState<string>('');
+  
+  // Локальное состояние для редактирования SL счётчиков
+  const [slLongCountEdit, setSlLongCountEdit] = useState<string>('');
+  const [slShortCountEdit, setSlShortCountEdit] = useState<string>('');
 
   // Синхронизируем локальное состояние с инструментом
   useEffect(() => {
     if (instrument) {
       setTp1VolumeEdit(instrument.tpLevels[0].volumePercent.toString());
       setTp2VolumeEdit(instrument.tpLevels[1].volumePercent.toString());
+      setSlLongCountEdit(instrument.slLong.count.toString());
+      setSlShortCountEdit(instrument.slShort.count.toString());
     }
   }, [instrument?.symbol]);
 
@@ -88,17 +94,46 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
     setTp2VolumeEdit(tp2.toString());
   };
 
-  const handleSlCountChange = (side: 'long' | 'short', value: number) => {
+  const handleSlLongCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSlLongCountEdit(e.target.value);
+  };
+
+  const handleSlLongCountBlur = () => {
+    const value = parseInt(slLongCountEdit) || 1;
     const [longCount, shortCount] = validateSlCounts(
-      side === 'long' ? value : instrument.slLong.count,
-      side === 'short' ? value : instrument.slShort.count,
-      side === 'long'
+      value,
+      instrument.slShort.count,
+      true
     );
 
     updateInstrument(instrument.symbol, {
       slLong: { ...instrument.slLong, count: longCount },
       slShort: { ...instrument.slShort, count: shortCount },
     });
+
+    setSlLongCountEdit(longCount.toString());
+    setSlShortCountEdit(shortCount.toString());
+  };
+
+  const handleSlShortCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSlShortCountEdit(e.target.value);
+  };
+
+  const handleSlShortCountBlur = () => {
+    const value = parseInt(slShortCountEdit) || 1;
+    const [longCount, shortCount] = validateSlCounts(
+      instrument.slLong.count,
+      value,
+      false
+    );
+
+    updateInstrument(instrument.symbol, {
+      slLong: { ...instrument.slLong, count: longCount },
+      slShort: { ...instrument.slShort, count: shortCount },
+    });
+
+    setSlLongCountEdit(longCount.toString());
+    setSlShortCountEdit(shortCount.toString());
   };
 
   const handleSlStepChange = (side: 'long' | 'short', value: number) => {
@@ -223,8 +258,9 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
                 <label>Кол-во</label>
                 <input
                   type="number"
-                  value={instrument.slLong.count}
-                  onChange={(e) => handleSlCountChange('long', Number(e.target.value))}
+                  value={slLongCountEdit}
+                  onChange={handleSlLongCountChange}
+                  onBlur={handleSlLongCountBlur}
                   min="1"
                   max="10"
                   disabled={instrument.isActive}
@@ -248,8 +284,9 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
                 <label>Кол-во</label>
                 <input
                   type="number"
-                  value={instrument.slShort.count}
-                  onChange={(e) => handleSlCountChange('short', Number(e.target.value))}
+                  value={slShortCountEdit}
+                  onChange={handleSlShortCountChange}
+                  onBlur={handleSlShortCountBlur}
                   min="1"
                   max="10"
                   disabled={instrument.isActive}
