@@ -55,6 +55,11 @@ export const validateSlCounts = (
 };
 
 /**
+ * Преобразует отрицательное значение в положительное
+ */
+export const ensurePositive = (value: number): number => Math.abs(value);
+
+/**
  * Валидация символа инструмента (BTCUSDT, ETHUSDT и т.д.)
  */
 export const isValidSymbol = (symbol: string): boolean => {
