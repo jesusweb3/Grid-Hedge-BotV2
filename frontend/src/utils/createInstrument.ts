@@ -12,16 +12,16 @@ export const createDefaultInstrument = (symbol: string): Instrument => {
     priceDecimals: 2,
     tickSize: 0.01,
     tpLevels: [
-      { stepUsdt: 300, volumePercent: 50 },
-      { stepUsdt: 1000, volumePercent: 50 },
+      { stepUsdt: 0, volumePercent: 50 },
+      { stepUsdt: 0, volumePercent: 50 },
     ],
     slLong: {
       count: 5,
-      stepUsdt: 150,
+      stepUsdt: 0,
     },
     slShort: {
       count: 5,
-      stepUsdt: 150,
+      stepUsdt: 0,
     },
     refill: {
       enabled: false,
