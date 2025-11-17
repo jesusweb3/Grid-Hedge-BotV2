@@ -1,0 +1,44 @@
+.error-dialog h2 {
+  color: #ffaa66;
+  margin: 0 0 12px 0;
+  font-size: 1.1rem;
+}
+
+.error-message {
+  color: #ffccaa;
+  font-size: 0.95rem;
+  margin: 0 0 8px 0;
+  line-height: 1.5;
+}
+
+.error-message strong {
+  color: #ffddbb;
+  font-weight: 600;
+}
+
+.error-hint {
+  color: #aaaaaa;
+  font-size: 0.85rem;
+  margin: 0 0 16px 0;
+  font-style: italic;
+}
+
+.btn-close {
+  padding: 8px 24px;
+  border-radius: 4px;
+  border: 1px solid #ff9944;
+  background-color: #ff9944;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background-color 0.2s;
+}
+
+.btn-close:hover {
+  background-color: #ff7722;
+  border-color: #ff7722;
+}
+
+.btn-close:active {
+  background-color: #ff5500;
+}

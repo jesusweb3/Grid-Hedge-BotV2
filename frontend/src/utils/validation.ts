@@ -93,3 +93,28 @@ export const validateInstrumentConsistency = (instrument: Instrument): boolean =
 
   return true;
 };
+
+/**
+ * Результат валидации при запуске инструмента
+ */
+export interface ValidationError {
+  valid: boolean;
+  message?: string;
+  field?: string;
+}
+
+/**
+ * Валидация инструмента перед запуском (активацией)
+ */
+export const validateInstrumentBeforeStart = (instrument: Instrument): ValidationError => {
+  // Проверяем что цена входа не равна нулю
+  if (instrument.entryPriceUsdt === 0) {
+    return {
+      valid: false,
+      message: 'Цена входа должна быть больше нуля',
+      field: 'entryPriceUsdt',
+    };
+  }
+
+  return { valid: true };
+};

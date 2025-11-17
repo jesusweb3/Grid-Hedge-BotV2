@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useInstrumentStore } from '../../stores/useInstrumentStore';
 import { ToggleSwitch } from '../common/ToggleSwitch';
-import { validateTpVolumes, validateSlCounts, ensurePositive } from '../../utils/validation';
+import { ValidationErrorDialog } from '../dialogs/ValidationErrorDialog';
+import { validateTpVolumes, validateSlCounts, ensurePositive, validateInstrumentBeforeStart } from '../../utils/validation';
 import type { Instrument } from '../../types/instrument';
 import './InstrumentCard.css';
 
@@ -38,6 +39,9 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
   const [refillShortPriceEdit, setRefillShortPriceEdit] = useState<string>('');
   const [refillShortVolumeEdit, setRefillShortVolumeEdit] = useState<string>('');
 
+  // Локальное состояние для ошибки валидации
+  const [validationError, setValidationError] = useState<string | null>(null);
+
   // Синхронизируем локальное состояние с инструментом
   useEffect(() => {
     if (instrument) {
@@ -63,6 +67,15 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
   }
 
   const handleActivityToggle = (checked: boolean) => {
+    // Если пытаемся включить - валидируем
+    if (checked) {
+      const validation = validateInstrumentBeforeStart(instrument);
+      if (!validation.valid) {
+        setValidationError(validation.message || 'Ошибка валидации');
+        return; // Не включаем
+      }
+    }
+
     updateInstrument(instrument.symbol, { isActive: checked });
   };
 
@@ -509,6 +522,13 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
           )}
         </div>
       </div>
+
+      <ValidationErrorDialog
+        isOpen={validationError !== null}
+        message={validationError || ''}
+        symbol={instrument.symbol}
+        onClose={() => setValidationError(null)}
+      />
     </div>
   );
 }
