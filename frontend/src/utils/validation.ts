@@ -1,3 +1,4 @@
+// frontend/src/utils/validation.ts
 import type { Instrument } from '../types/instrument';
 
 /**
@@ -114,6 +115,90 @@ export const validateInstrumentBeforeStart = (instrument: Instrument): Validatio
       message: 'Цена входа должна быть больше нуля',
       field: 'entryPriceUsdt',
     };
+  }
+
+  // Проверяем что объём входа не равен нулю
+  if (instrument.entryVolumeUsdt === 0) {
+    return {
+      valid: false,
+      message: 'Объём входа должен быть больше нуля',
+      field: 'entryVolumeUsdt',
+    };
+  }
+
+  // Проверяем что шаг TP1 не равен нулю
+  if (instrument.tpLevels[0].stepUsdt === 0) {
+    return {
+      valid: false,
+      message: 'Шаг TP1 должен быть больше нуля',
+      field: 'tp1Step',
+    };
+  }
+
+  // Проверяем что шаг TP2 не равен нулю
+  if (instrument.tpLevels[1].stepUsdt === 0) {
+    return {
+      valid: false,
+      message: 'Шаг TP2 должен быть больше нуля',
+      field: 'tp2Step',
+    };
+  }
+
+  // Проверяем что шаг SL Long не равен нулю
+  if (instrument.slLong.stepUsdt === 0) {
+    return {
+      valid: false,
+      message: 'Шаг SL Long должен быть больше нуля',
+      field: 'slLongStep',
+    };
+  }
+
+  // Проверяем что шаг SL Short не равен нулю
+  if (instrument.slShort.stepUsdt === 0) {
+    return {
+      valid: false,
+      message: 'Шаг SL Short должен быть больше нуля',
+      field: 'slShortStep',
+    };
+  }
+
+  // Если доливка включена - проверяем параметры доливки
+  if (instrument.refill.enabled) {
+    // Проверяем что цена Long доливки не равна нулю
+    if (instrument.refill.longPriceUsdt === 0) {
+      return {
+        valid: false,
+        message: 'Цена Long доливки должна быть больше нуля',
+        field: 'refillLongPrice',
+      };
+    }
+
+    // Проверяем что объём Long доливки не равен нулю
+    if (instrument.refill.longVolumeUsdt === 0) {
+      return {
+        valid: false,
+        message: 'Объём Long доливки должен быть больше нуля',
+        field: 'refillLongVolume',
+      };
+    }
+
+    // Проверяем что цена Short доливки не равна нулю
+    if (instrument.refill.shortPriceUsdt === 0) {
+      return {
+        valid: false,
+        message: 'Цена Short доливки должна быть больше нуля',
+        field: 'refillShortPrice',
+      };
+    }
+
+    // Проверяем что объём Short доливки не равен нулю
+    if (instrument.refill.shortVolumeUsdt === 0) {
+      return {
+        valid: false,
+        message: 'Объём Short доливки должен быть больше нуля',
+        field: 'refillShortVolume',
+      };
+    }
   }
 
   return { valid: true };
