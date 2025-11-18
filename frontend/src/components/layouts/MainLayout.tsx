@@ -12,16 +12,23 @@ export function MainLayout() {
   const selectInstrument = useInstrumentStore((state) => state.selectInstrument);
   const addInstrument = useInstrumentStore((state) => state.addInstrument);
 
-  const currentInstrument = instruments.find((i) => i.symbol === currentSymbol) || null;
+  const currentInstrument = currentSymbol
+    ? instruments.find((i) => i.symbol === currentSymbol) || null
+    : null;
 
   useEffect(() => {
-    // Если текущий символ удалён или нет инструментов
-    if (!currentInstrument && instruments.length > 0) {
-      selectInstrument(instruments[0].symbol);
-    } else if (instruments.length === 0) {
-      selectInstrument(null);
+    if (instruments.length === 0) {
+      if (currentSymbol !== null) {
+        selectInstrument(null);
+      }
+      return;
     }
-  }, [instruments, currentInstrument, selectInstrument]);
+
+    const currentExists = instruments.some((i) => i.symbol === currentSymbol);
+    if (!currentExists) {
+      selectInstrument(instruments[0].symbol);
+    }
+  }, [instruments.length, currentSymbol, selectInstrument]);
 
   const handleAddInstrument = (symbol: string) => {
     const success = addInstrument(symbol);

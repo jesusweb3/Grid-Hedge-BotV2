@@ -8,6 +8,39 @@ const clamp = (value: number, min: number, max: number): number => {
 };
 
 /**
+ * Обобщённая валидация пары значений с синхронизацией по сумме
+ * @param value1 первое значение
+ * @param value2 второе значение
+ * @param changedFirst был ли изменён первый параметр
+ * @param individualMin минимум для каждого значения
+ * @param individualMax максимум для каждого значения
+ * @param maxSum максимальная допустимая сумма
+ */
+const validatePairWithSum = (
+  value1: number,
+  value2: number,
+  changedFirst: boolean,
+  individualMin: number,
+  individualMax: number,
+  maxSum: number
+): [number, number] => {
+  const clamped1 = clamp(value1, individualMin, individualMax);
+  const clamped2 = clamp(value2, individualMin, individualMax);
+
+  const sum = clamped1 + clamped2;
+
+  if (sum <= maxSum) {
+    return [clamped1, clamped2];
+  }
+
+  if (changedFirst) {
+    return [clamped1, clamp(maxSum - clamped1, individualMin, individualMax)];
+  }
+
+  return [clamp(maxSum - clamped2, individualMin, individualMax), clamped2];
+};
+
+/**
  * Валидация и синхронизация объёмов TP так, чтобы их сумма была 100%
  */
 export const validateTpVolumes = (
@@ -15,20 +48,7 @@ export const validateTpVolumes = (
   tp2Volume: number,
   changedTp1: boolean
 ): [number, number] => {
-  const tp1Clamped = clamp(tp1Volume, 1, 99);
-  const tp2Clamped = clamp(tp2Volume, 1, 99);
-
-  const sum = tp1Clamped + tp2Clamped;
-
-  if (Math.abs(sum - 100) < 1e-6) {
-    return [tp1Clamped, tp2Clamped];
-  }
-
-  if (changedTp1) {
-    return [tp1Clamped, clamp(100 - tp1Clamped, 1, 99)];
-  }
-
-  return [clamp(100 - tp2Clamped, 1, 99), tp2Clamped];
+  return validatePairWithSum(tp1Volume, tp2Volume, changedTp1, 1, 99, 100);
 };
 
 /**
@@ -39,20 +59,7 @@ export const validateSlCounts = (
   shortCount: number,
   changedLong: boolean
 ): [number, number] => {
-  const longClamped = clamp(longCount, 1, 10);
-  const shortClamped = clamp(shortCount, 1, 10);
-
-  const sum = longClamped + shortClamped;
-
-  if (sum <= 10) {
-    return [longClamped, shortClamped];
-  }
-
-  if (changedLong) {
-    return [longClamped, clamp(10 - longClamped, 1, 10)];
-  }
-
-  return [clamp(10 - shortClamped, 1, 10), shortClamped];
+  return validatePairWithSum(longCount, shortCount, changedLong, 1, 10, 10);
 };
 
 /**
