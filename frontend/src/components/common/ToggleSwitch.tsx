@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import './ToggleSwitch.css';
 
 interface ToggleSwitchProps {
@@ -8,20 +7,16 @@ interface ToggleSwitchProps {
 }
 
 export function ToggleSwitch({ checked, onChange, disabled = false }: ToggleSwitchProps) {
-  const [isAnimating, setIsAnimating] = useState(false);
-
   const handleClick = () => {
     if (disabled) return;
-    setIsAnimating(true);
     onChange(!checked);
-    setTimeout(() => setIsAnimating(false), 300);
   };
 
   return (
     <button
       onClick={handleClick}
       disabled={disabled}
-      className={`toggle-switch ${checked ? 'checked' : ''} ${isAnimating ? 'animating' : ''}`}
+      className={`toggle-switch ${checked ? 'checked' : ''}`}
       aria-label="Toggle"
     />
   );
