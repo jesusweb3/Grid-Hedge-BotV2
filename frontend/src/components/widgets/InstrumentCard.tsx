@@ -10,55 +10,65 @@ interface InstrumentCardProps {
   instrument: Instrument | null;
 }
 
+type EditableFields = {
+  entryPrice: string;
+  entryVolume: string;
+  tpStep1: string;
+  tpStep2: string;
+  tp1Volume: string;
+  tp2Volume: string;
+  slLongStep: string;
+  slShortStep: string;
+  slLongCount: string;
+  slShortCount: string;
+  refillLongPrice: string;
+  refillLongVolume: string;
+  refillShortPrice: string;
+  refillShortVolume: string;
+};
+
+const EMPTY_EDITS: EditableFields = {
+  entryPrice: '',
+  entryVolume: '',
+  tpStep1: '',
+  tpStep2: '',
+  tp1Volume: '',
+  tp2Volume: '',
+  slLongStep: '',
+  slShortStep: '',
+  slLongCount: '',
+  slShortCount: '',
+  refillLongPrice: '',
+  refillLongVolume: '',
+  refillShortPrice: '',
+  refillShortVolume: '',
+};
+
+const initializeEdits = (instrument: Instrument): EditableFields => ({
+  entryPrice: instrument.entryPriceUsdt.toString(),
+  entryVolume: instrument.entryVolumeUsdt.toString(),
+  tpStep1: instrument.tpLevels[0].stepUsdt.toString(),
+  tpStep2: instrument.tpLevels[1].stepUsdt.toString(),
+  tp1Volume: instrument.tpLevels[0].volumePercent.toString(),
+  tp2Volume: instrument.tpLevels[1].volumePercent.toString(),
+  slLongStep: instrument.slLong.stepUsdt.toString(),
+  slShortStep: instrument.slShort.stepUsdt.toString(),
+  slLongCount: instrument.slLong.count.toString(),
+  slShortCount: instrument.slShort.count.toString(),
+  refillLongPrice: instrument.refill.longPriceUsdt.toString(),
+  refillLongVolume: instrument.refill.longVolumeUsdt.toString(),
+  refillShortPrice: instrument.refill.shortPriceUsdt.toString(),
+  refillShortVolume: instrument.refill.shortVolumeUsdt.toString(),
+});
+
 export function InstrumentCard({ instrument }: InstrumentCardProps) {
   const updateInstrument = useInstrumentStore((state) => state.updateInstrument);
-  
-  // Локальное состояние для цены и объёма входа
-  const [entryPriceEdit, setEntryPriceEdit] = useState<string>('');
-  const [entryVolumeEdit, setEntryVolumeEdit] = useState<string>('');
-  
-  // Локальное состояние для TP шагов
-  const [tpStep1Edit, setTpStep1Edit] = useState<string>('');
-  const [tpStep2Edit, setTpStep2Edit] = useState<string>('');
-  
-  // Локальное состояние для редактирования TP объёмов
-  const [tp1VolumeEdit, setTp1VolumeEdit] = useState<string>('');
-  const [tp2VolumeEdit, setTp2VolumeEdit] = useState<string>('');
-  
-  // Локальное состояние для SL шагов
-  const [slLongStepEdit, setSlLongStepEdit] = useState<string>('');
-  const [slShortStepEdit, setSlShortStepEdit] = useState<string>('');
-  
-  // Локальное состояние для редактирования SL счётчиков
-  const [slLongCountEdit, setSlLongCountEdit] = useState<string>('');
-  const [slShortCountEdit, setSlShortCountEdit] = useState<string>('');
-
-  // Локальное состояние для доливки
-  const [refillLongPriceEdit, setRefillLongPriceEdit] = useState<string>('');
-  const [refillLongVolumeEdit, setRefillLongVolumeEdit] = useState<string>('');
-  const [refillShortPriceEdit, setRefillShortPriceEdit] = useState<string>('');
-  const [refillShortVolumeEdit, setRefillShortVolumeEdit] = useState<string>('');
-
-  // Локальное состояние для ошибки валидации
+  const [edits, setEdits] = useState<EditableFields>(EMPTY_EDITS);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  // Синхронизируем локальное состояние с инструментом
   useEffect(() => {
     if (instrument) {
-      setEntryPriceEdit(instrument.entryPriceUsdt.toString());
-      setEntryVolumeEdit(instrument.entryVolumeUsdt.toString());
-      setTpStep1Edit(instrument.tpLevels[0].stepUsdt.toString());
-      setTpStep2Edit(instrument.tpLevels[1].stepUsdt.toString());
-      setTp1VolumeEdit(instrument.tpLevels[0].volumePercent.toString());
-      setTp2VolumeEdit(instrument.tpLevels[1].volumePercent.toString());
-      setSlLongStepEdit(instrument.slLong.stepUsdt.toString());
-      setSlShortStepEdit(instrument.slShort.stepUsdt.toString());
-      setSlLongCountEdit(instrument.slLong.count.toString());
-      setSlShortCountEdit(instrument.slShort.count.toString());
-      setRefillLongPriceEdit(instrument.refill.longPriceUsdt.toString());
-      setRefillLongVolumeEdit(instrument.refill.longVolumeUsdt.toString());
-      setRefillShortPriceEdit(instrument.refill.shortPriceUsdt.toString());
-      setRefillShortVolumeEdit(instrument.refill.shortVolumeUsdt.toString());
+      setEdits(initializeEdits(instrument));
     }
   }, [instrument?.symbol]);
 
@@ -67,227 +77,134 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
   }
 
   const handleActivityToggle = (checked: boolean) => {
-    // Если пытаемся включить - валидируем
     if (checked) {
       const validation = validateInstrumentBeforeStart(instrument);
       if (!validation.valid) {
         setValidationError(validation.message || 'Ошибка валидации');
-        return; // Не включаем
+        return;
       }
     }
-
     updateInstrument(instrument.symbol, { isActive: checked });
   };
 
-  const handleEntryPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEntryPriceEdit(e.target.value);
+  const makeFieldHandler = (field: keyof EditableFields) => ({
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+      setEdits(prev => ({ ...prev, [field]: e.target.value }));
+    },
+  });
+
+  // === ФАБРИКИ ДЛЯ ОБРАБОТЧИКОВ ===
+
+  // Фабрика для простых числовых полей (число → ensurePositive → store)
+  const makeSimpleNumberBlur = (
+    field: keyof EditableFields,
+    updateFn: (value: number) => void
+  ) => () => {
+    const value = parseFloat(edits[field]) || 0;
+    const positive = ensurePositive(value);
+    updateFn(positive);
+    setEdits(prev => ({ ...prev, [field]: positive.toString() }));
   };
 
-  const handleEntryPriceBlur = () => {
-    const value = parseFloat(entryPriceEdit) || 0;
-    const positiveValue = ensurePositive(value);
-    updateInstrument(instrument.symbol, { entryPriceUsdt: positiveValue });
-    setEntryPriceEdit(positiveValue.toString());
-  };
-
-  const handleEntryVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEntryVolumeEdit(e.target.value);
-  };
-
-  const handleEntryVolumeBlur = () => {
-    const value = parseFloat(entryVolumeEdit) || 0;
-    const positiveValue = ensurePositive(value);
-    updateInstrument(instrument.symbol, { entryVolumeUsdt: positiveValue });
-    setEntryVolumeEdit(positiveValue.toString());
-  };
-
-  const handleTpStep1Change = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTpStep1Edit(e.target.value);
-  };
-
-  const handleTpStep1Blur = () => {
-    const value = parseFloat(tpStep1Edit) || 0;
-    const positiveValue = ensurePositive(value);
-    const newTpLevels = [...instrument.tpLevels];
-    newTpLevels[0] = { ...newTpLevels[0], stepUsdt: positiveValue };
-    updateInstrument(instrument.symbol, { tpLevels: newTpLevels as [any, any] });
-    setTpStep1Edit(positiveValue.toString());
-  };
-
-  const handleTpStep2Change = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTpStep2Edit(e.target.value);
-  };
-
-  const handleTpStep2Blur = () => {
-    const value = parseFloat(tpStep2Edit) || 0;
-    const positiveValue = ensurePositive(value);
-    const newTpLevels = [...instrument.tpLevels];
-    newTpLevels[1] = { ...newTpLevels[1], stepUsdt: positiveValue };
-    updateInstrument(instrument.symbol, { tpLevels: newTpLevels as [any, any] });
-    setTpStep2Edit(positiveValue.toString());
-  };
-
-  const handleTp1VolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTp1VolumeEdit(e.target.value);
-  };
-
-  const handleTp2VolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTp2VolumeEdit(e.target.value);
-  };
-
-  const handleTp1VolumeBlur = () => {
-    const value = parseFloat(tp1VolumeEdit) || 0;
-    const [tp1, tp2] = validateTpVolumes(
-      value,
-      instrument.tpLevels[1].volumePercent,
-      true
-    );
+  // Фабрика для TP объёмов (связанная валидация)
+  const makeTpVolumeBlur = (isFirstVolume: boolean) => () => {
+    const tp1 = parseFloat(edits.tp1Volume) || 0;
+    const tp2 = parseFloat(edits.tp2Volume) || 0;
+    const [validTp1, validTp2] = validateTpVolumes(tp1, tp2, isFirstVolume);
 
     const newTpLevels = [...instrument.tpLevels];
-    newTpLevels[0] = { ...newTpLevels[0], volumePercent: tp1 };
-    newTpLevels[1] = { ...newTpLevels[1], volumePercent: tp2 };
+    newTpLevels[0] = { ...newTpLevels[0], volumePercent: validTp1 };
+    newTpLevels[1] = { ...newTpLevels[1], volumePercent: validTp2 };
     updateInstrument(instrument.symbol, { tpLevels: newTpLevels as [any, any] });
-    
-    setTp1VolumeEdit(tp1.toString());
-    setTp2VolumeEdit(tp2.toString());
+
+    setEdits(prev => ({
+      ...prev,
+      tp1Volume: validTp1.toString(),
+      tp2Volume: validTp2.toString(),
+    }));
   };
 
-  const handleTp2VolumeBlur = () => {
-    const value = parseFloat(tp2VolumeEdit) || 0;
-    const [tp1, tp2] = validateTpVolumes(
-      instrument.tpLevels[0].volumePercent,
-      value,
-      false
-    );
+  // Фабрика для SL счётчиков (связанная валидация)
+  const makeSlCountBlur = (isLongCount: boolean) => () => {
+    const longCount = parseInt(edits.slLongCount) || 1;
+    const shortCount = parseInt(edits.slShortCount) || 1;
+    const [validLong, validShort] = validateSlCounts(longCount, shortCount, isLongCount);
 
+    updateInstrument(instrument.symbol, {
+      slLong: { ...instrument.slLong, count: validLong },
+      slShort: { ...instrument.slShort, count: validShort },
+    });
+
+    setEdits(prev => ({
+      ...prev,
+      slLongCount: validLong.toString(),
+      slShortCount: validShort.toString(),
+    }));
+  };
+
+  // === ГЕНЕРИРУЕМ ОБРАБОТЧИКИ ЧЕРЕЗ ФАБРИКИ ===
+
+  const handleEntryPriceBlur = makeSimpleNumberBlur('entryPrice', (value) => {
+    updateInstrument(instrument.symbol, { entryPriceUsdt: value });
+  });
+
+  const handleEntryVolumeBlur = makeSimpleNumberBlur('entryVolume', (value) => {
+    updateInstrument(instrument.symbol, { entryVolumeUsdt: value });
+  });
+
+  const handleTpStep1Blur = makeSimpleNumberBlur('tpStep1', (value) => {
     const newTpLevels = [...instrument.tpLevels];
-    newTpLevels[0] = { ...newTpLevels[0], volumePercent: tp1 };
-    newTpLevels[1] = { ...newTpLevels[1], volumePercent: tp2 };
+    newTpLevels[0] = { ...newTpLevels[0], stepUsdt: value };
     updateInstrument(instrument.symbol, { tpLevels: newTpLevels as [any, any] });
-    
-    setTp1VolumeEdit(tp1.toString());
-    setTp2VolumeEdit(tp2.toString());
-  };
+  });
 
-  const handleSlLongStepChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSlLongStepEdit(e.target.value);
-  };
+  const handleTpStep2Blur = makeSimpleNumberBlur('tpStep2', (value) => {
+    const newTpLevels = [...instrument.tpLevels];
+    newTpLevels[1] = { ...newTpLevels[1], stepUsdt: value };
+    updateInstrument(instrument.symbol, { tpLevels: newTpLevels as [any, any] });
+  });
 
-  const handleSlLongStepBlur = () => {
-    const value = parseFloat(slLongStepEdit) || 0;
-    const positiveValue = ensurePositive(value);
+  const handleTp1VolumeBlur = makeTpVolumeBlur(true);
+  const handleTp2VolumeBlur = makeTpVolumeBlur(false);
+
+  const handleSlLongStepBlur = makeSimpleNumberBlur('slLongStep', (value) => {
     updateInstrument(instrument.symbol, {
-      slLong: { ...instrument.slLong, stepUsdt: positiveValue },
+      slLong: { ...instrument.slLong, stepUsdt: value },
     });
-    setSlLongStepEdit(positiveValue.toString());
-  };
+  });
 
-  const handleSlShortStepChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSlShortStepEdit(e.target.value);
-  };
-
-  const handleSlShortStepBlur = () => {
-    const value = parseFloat(slShortStepEdit) || 0;
-    const positiveValue = ensurePositive(value);
+  const handleSlShortStepBlur = makeSimpleNumberBlur('slShortStep', (value) => {
     updateInstrument(instrument.symbol, {
-      slShort: { ...instrument.slShort, stepUsdt: positiveValue },
+      slShort: { ...instrument.slShort, stepUsdt: value },
     });
-    setSlShortStepEdit(positiveValue.toString());
-  };
+  });
 
-  const handleSlLongCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSlLongCountEdit(e.target.value);
-  };
+  const handleSlLongCountBlur = makeSlCountBlur(true);
+  const handleSlShortCountBlur = makeSlCountBlur(false);
 
-  const handleSlLongCountBlur = () => {
-    const value = parseInt(slLongCountEdit) || 1;
-    const [longCount, shortCount] = validateSlCounts(
-      value,
-      instrument.slShort.count,
-      true
-    );
-
+  const handleRefillLongPriceBlur = makeSimpleNumberBlur('refillLongPrice', (value) => {
     updateInstrument(instrument.symbol, {
-      slLong: { ...instrument.slLong, count: longCount },
-      slShort: { ...instrument.slShort, count: shortCount },
+      refill: { ...instrument.refill, longPriceUsdt: value },
     });
+  });
 
-    setSlLongCountEdit(longCount.toString());
-    setSlShortCountEdit(shortCount.toString());
-  };
-
-  const handleSlShortCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSlShortCountEdit(e.target.value);
-  };
-
-  const handleSlShortCountBlur = () => {
-    const value = parseInt(slShortCountEdit) || 1;
-    const [longCount, shortCount] = validateSlCounts(
-      instrument.slLong.count,
-      value,
-      false
-    );
-
+  const handleRefillLongVolumeBlur = makeSimpleNumberBlur('refillLongVolume', (value) => {
     updateInstrument(instrument.symbol, {
-      slLong: { ...instrument.slLong, count: longCount },
-      slShort: { ...instrument.slShort, count: shortCount },
+      refill: { ...instrument.refill, longVolumeUsdt: value },
     });
+  });
 
-    setSlLongCountEdit(longCount.toString());
-    setSlShortCountEdit(shortCount.toString());
-  };
-
-  const handleRefillLongPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setRefillLongPriceEdit(e.target.value);
-  };
-
-  const handleRefillLongPriceBlur = () => {
-    const value = parseFloat(refillLongPriceEdit) || 0;
-    const positiveValue = ensurePositive(value);
+  const handleRefillShortPriceBlur = makeSimpleNumberBlur('refillShortPrice', (value) => {
     updateInstrument(instrument.symbol, {
-      refill: { ...instrument.refill, longPriceUsdt: positiveValue },
+      refill: { ...instrument.refill, shortPriceUsdt: value },
     });
-    setRefillLongPriceEdit(positiveValue.toString());
-  };
+  });
 
-  const handleRefillLongVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setRefillLongVolumeEdit(e.target.value);
-  };
-
-  const handleRefillLongVolumeBlur = () => {
-    const value = parseFloat(refillLongVolumeEdit) || 0;
-    const positiveValue = ensurePositive(value);
+  const handleRefillShortVolumeBlur = makeSimpleNumberBlur('refillShortVolume', (value) => {
     updateInstrument(instrument.symbol, {
-      refill: { ...instrument.refill, longVolumeUsdt: positiveValue },
+      refill: { ...instrument.refill, shortVolumeUsdt: value },
     });
-    setRefillLongVolumeEdit(positiveValue.toString());
-  };
-
-  const handleRefillShortPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setRefillShortPriceEdit(e.target.value);
-  };
-
-  const handleRefillShortPriceBlur = () => {
-    const value = parseFloat(refillShortPriceEdit) || 0;
-    const positiveValue = ensurePositive(value);
-    updateInstrument(instrument.symbol, {
-      refill: { ...instrument.refill, shortPriceUsdt: positiveValue },
-    });
-    setRefillShortPriceEdit(positiveValue.toString());
-  };
-
-  const handleRefillShortVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setRefillShortVolumeEdit(e.target.value);
-  };
-
-  const handleRefillShortVolumeBlur = () => {
-    const value = parseFloat(refillShortVolumeEdit) || 0;
-    const positiveValue = ensurePositive(value);
-    updateInstrument(instrument.symbol, {
-      refill: { ...instrument.refill, shortVolumeUsdt: positiveValue },
-    });
-    setRefillShortVolumeEdit(positiveValue.toString());
-  };
+  });
 
   return (
     <div className="instrument-card">
@@ -309,8 +226,8 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
               <label>Цена входа</label>
               <input
                 type="number"
-                value={entryPriceEdit}
-                onChange={handleEntryPriceChange}
+                value={edits.entryPrice}
+                {...makeFieldHandler('entryPrice')}
                 onBlur={handleEntryPriceBlur}
                 step={instrument.tickSize}
                 disabled={instrument.isActive}
@@ -320,8 +237,8 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
               <label>Объём входа</label>
               <input
                 type="number"
-                value={entryVolumeEdit}
-                onChange={handleEntryVolumeChange}
+                value={edits.entryVolume}
+                {...makeFieldHandler('entryVolume')}
                 onBlur={handleEntryVolumeBlur}
                 step="0.01"
                 disabled={instrument.isActive}
@@ -342,8 +259,8 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
                 <label>Шаг</label>
                 <input
                   type="number"
-                  value={tpStep1Edit}
-                  onChange={handleTpStep1Change}
+                  value={edits.tpStep1}
+                  {...makeFieldHandler('tpStep1')}
                   onBlur={handleTpStep1Blur}
                   step="0.01"
                   disabled={instrument.isActive}
@@ -353,8 +270,8 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
                 <label>Объём %</label>
                 <input
                   type="number"
-                  value={tp1VolumeEdit}
-                  onChange={handleTp1VolumeChange}
+                  value={edits.tp1Volume}
+                  {...makeFieldHandler('tp1Volume')}
                   onBlur={handleTp1VolumeBlur}
                   min="1"
                   max="99"
@@ -370,8 +287,8 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
                 <label>Шаг</label>
                 <input
                   type="number"
-                  value={tpStep2Edit}
-                  onChange={handleTpStep2Change}
+                  value={edits.tpStep2}
+                  {...makeFieldHandler('tpStep2')}
                   onBlur={handleTpStep2Blur}
                   step="0.01"
                   disabled={instrument.isActive}
@@ -381,8 +298,8 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
                 <label>Объём %</label>
                 <input
                   type="number"
-                  value={tp2VolumeEdit}
-                  onChange={handleTp2VolumeChange}
+                  value={edits.tp2Volume}
+                  {...makeFieldHandler('tp2Volume')}
                   onBlur={handleTp2VolumeBlur}
                   min="1"
                   max="99"
@@ -403,8 +320,8 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
                 <label>Кол-во</label>
                 <input
                   type="number"
-                  value={slLongCountEdit}
-                  onChange={handleSlLongCountChange}
+                  value={edits.slLongCount}
+                  {...makeFieldHandler('slLongCount')}
                   onBlur={handleSlLongCountBlur}
                   min="1"
                   max="10"
@@ -415,8 +332,8 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
                 <label>Шаг</label>
                 <input
                   type="number"
-                  value={slLongStepEdit}
-                  onChange={handleSlLongStepChange}
+                  value={edits.slLongStep}
+                  {...makeFieldHandler('slLongStep')}
                   onBlur={handleSlLongStepBlur}
                   step="0.01"
                   disabled={instrument.isActive}
@@ -430,8 +347,8 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
                 <label>Кол-во</label>
                 <input
                   type="number"
-                  value={slShortCountEdit}
-                  onChange={handleSlShortCountChange}
+                  value={edits.slShortCount}
+                  {...makeFieldHandler('slShortCount')}
                   onBlur={handleSlShortCountBlur}
                   min="1"
                   max="10"
@@ -442,8 +359,8 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
                 <label>Шаг</label>
                 <input
                   type="number"
-                  value={slShortStepEdit}
-                  onChange={handleSlShortStepChange}
+                  value={edits.slShortStep}
+                  {...makeFieldHandler('slShortStep')}
                   onBlur={handleSlShortStepBlur}
                   step="0.01"
                   disabled={instrument.isActive}
@@ -478,8 +395,8 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
                 <label>Long цена</label>
                 <input
                   type="number"
-                  value={refillLongPriceEdit}
-                  onChange={handleRefillLongPriceChange}
+                  value={edits.refillLongPrice}
+                  {...makeFieldHandler('refillLongPrice')}
                   onBlur={handleRefillLongPriceBlur}
                   step={instrument.tickSize}
                   disabled={instrument.isActive}
@@ -489,8 +406,8 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
                 <label>Long объём</label>
                 <input
                   type="number"
-                  value={refillLongVolumeEdit}
-                  onChange={handleRefillLongVolumeChange}
+                  value={edits.refillLongVolume}
+                  {...makeFieldHandler('refillLongVolume')}
                   onBlur={handleRefillLongVolumeBlur}
                   step="0.01"
                   disabled={instrument.isActive}
@@ -500,8 +417,8 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
                 <label>Short цена</label>
                 <input
                   type="number"
-                  value={refillShortPriceEdit}
-                  onChange={handleRefillShortPriceChange}
+                  value={edits.refillShortPrice}
+                  {...makeFieldHandler('refillShortPrice')}
                   onBlur={handleRefillShortPriceBlur}
                   step={instrument.tickSize}
                   disabled={instrument.isActive}
@@ -511,8 +428,8 @@ export function InstrumentCard({ instrument }: InstrumentCardProps) {
                 <label>Short объём</label>
                 <input
                   type="number"
-                  value={refillShortVolumeEdit}
-                  onChange={handleRefillShortVolumeChange}
+                  value={edits.refillShortVolume}
+                  {...makeFieldHandler('refillShortVolume')}
                   onBlur={handleRefillShortVolumeBlur}
                   step="0.01"
                   disabled={instrument.isActive}
