@@ -1,5 +1,11 @@
-// frontend/src/utils/validation.ts
 import type { Instrument } from '../types/instrument';
+
+/**
+ * Ограничивает значение в диапазон [min, max]
+ */
+const clamp = (value: number, min: number, max: number): number => {
+  return Math.max(min, Math.min(max, value));
+};
 
 /**
  * Валидация и синхронизация объёмов TP так, чтобы их сумма была 100%
@@ -9,24 +15,20 @@ export const validateTpVolumes = (
   tp2Volume: number,
   changedTp1: boolean
 ): [number, number] => {
-  // Ограничиваем каждый в пределах 1-99
-  const tp1Clamped = Math.max(1, Math.min(99, tp1Volume));
-  const tp2Clamped = Math.max(1, Math.min(99, tp2Volume));
+  const tp1Clamped = clamp(tp1Volume, 1, 99);
+  const tp2Clamped = clamp(tp2Volume, 1, 99);
 
   const sum = tp1Clamped + tp2Clamped;
 
-  // Если сумма уже 100 - возвращаем как есть
   if (Math.abs(sum - 100) < 1e-6) {
     return [tp1Clamped, tp2Clamped];
   }
 
-  // Если изменился TP1 - корректируем TP2
   if (changedTp1) {
-    return [tp1Clamped, Math.max(1, Math.min(99, 100 - tp1Clamped))];
+    return [tp1Clamped, clamp(100 - tp1Clamped, 1, 99)];
   }
 
-  // Если изменился TP2 - корректируем TP1
-  return [Math.max(1, Math.min(99, 100 - tp2Clamped)), tp2Clamped];
+  return [clamp(100 - tp2Clamped, 1, 99), tp2Clamped];
 };
 
 /**
@@ -37,22 +39,20 @@ export const validateSlCounts = (
   shortCount: number,
   changedLong: boolean
 ): [number, number] => {
-  const longClamped = Math.max(1, Math.min(10, longCount));
-  const shortClamped = Math.max(1, Math.min(10, shortCount));
+  const longClamped = clamp(longCount, 1, 10);
+  const shortClamped = clamp(shortCount, 1, 10);
 
   const sum = longClamped + shortClamped;
 
-  // Если сумма <= 10 - всё хорошо
   if (sum <= 10) {
     return [longClamped, shortClamped];
   }
 
-  // Если превышает 10 - корректируем один из них
   if (changedLong) {
-    return [longClamped, Math.max(1, 10 - longClamped)];
+    return [longClamped, clamp(10 - longClamped, 1, 10)];
   }
 
-  return [Math.max(1, 10 - shortClamped), shortClamped];
+  return [clamp(10 - shortClamped, 1, 10), shortClamped];
 };
 
 /**
@@ -71,23 +71,19 @@ export const isValidSymbol = (symbol: string): boolean => {
  * Проверка консистентности всех TP/SL настроек инструмента
  */
 export const validateInstrumentConsistency = (instrument: Instrument): boolean => {
-  // Должны быть ровно 2 TP уровня
   if (instrument.tpLevels.length !== 2) {
     return false;
   }
 
-  // Сумма TP объёмов должна быть 100%
   const tpSum = instrument.tpLevels[0].volumePercent + instrument.tpLevels[1].volumePercent;
   if (Math.abs(tpSum - 100) > 1e-6) {
     return false;
   }
 
-  // SL должны быть >= 1
   if (instrument.slLong.count < 1 || instrument.slShort.count < 1) {
     return false;
   }
 
-  // SL суммарно должны быть <= 10
   if (instrument.slLong.count + instrument.slShort.count > 10) {
     return false;
   }
@@ -108,7 +104,6 @@ export interface ValidationError {
  * Валидация инструмента перед запуском (активацией)
  */
 export const validateInstrumentBeforeStart = (instrument: Instrument): ValidationError => {
-  // Проверяем что цена входа не равна нулю
   if (instrument.entryPriceUsdt === 0) {
     return {
       valid: false,
@@ -117,7 +112,6 @@ export const validateInstrumentBeforeStart = (instrument: Instrument): Validatio
     };
   }
 
-  // Проверяем что объём входа не равен нулю
   if (instrument.entryVolumeUsdt === 0) {
     return {
       valid: false,
@@ -126,7 +120,6 @@ export const validateInstrumentBeforeStart = (instrument: Instrument): Validatio
     };
   }
 
-  // Проверяем что шаг TP1 не равен нулю
   if (instrument.tpLevels[0].stepUsdt === 0) {
     return {
       valid: false,
@@ -135,7 +128,6 @@ export const validateInstrumentBeforeStart = (instrument: Instrument): Validatio
     };
   }
 
-  // Проверяем что шаг TP2 не равен нулю
   if (instrument.tpLevels[1].stepUsdt === 0) {
     return {
       valid: false,
@@ -144,7 +136,6 @@ export const validateInstrumentBeforeStart = (instrument: Instrument): Validatio
     };
   }
 
-  // Проверяем что шаг SL Long не равен нулю
   if (instrument.slLong.stepUsdt === 0) {
     return {
       valid: false,
@@ -153,7 +144,6 @@ export const validateInstrumentBeforeStart = (instrument: Instrument): Validatio
     };
   }
 
-  // Проверяем что шаг SL Short не равен нулю
   if (instrument.slShort.stepUsdt === 0) {
     return {
       valid: false,
@@ -162,9 +152,7 @@ export const validateInstrumentBeforeStart = (instrument: Instrument): Validatio
     };
   }
 
-  // Если доливка включена - проверяем параметры доливки
   if (instrument.refill.enabled) {
-    // Проверяем что цена Long доливки не равна нулю
     if (instrument.refill.longPriceUsdt === 0) {
       return {
         valid: false,
@@ -173,7 +161,6 @@ export const validateInstrumentBeforeStart = (instrument: Instrument): Validatio
       };
     }
 
-    // Проверяем что объём Long доливки не равен нулю
     if (instrument.refill.longVolumeUsdt === 0) {
       return {
         valid: false,
@@ -182,7 +169,6 @@ export const validateInstrumentBeforeStart = (instrument: Instrument): Validatio
       };
     }
 
-    // Проверяем что цена Short доливки не равна нулю
     if (instrument.refill.shortPriceUsdt === 0) {
       return {
         valid: false,
@@ -191,7 +177,6 @@ export const validateInstrumentBeforeStart = (instrument: Instrument): Validatio
       };
     }
 
-    // Проверяем что объём Short доливки не равен нулю
     if (instrument.refill.shortVolumeUsdt === 0) {
       return {
         valid: false,

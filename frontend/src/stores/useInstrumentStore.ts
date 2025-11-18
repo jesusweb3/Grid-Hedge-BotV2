@@ -5,11 +5,8 @@ import { createDefaultInstrument } from '../utils/createInstrument';
 const STORAGE_KEY = 'hedgbot_state';
 
 interface InstrumentStore {
-  // State
   instruments: Instrument[];
   currentSymbol: string | null;
-
-  // Actions
   addInstrument: (symbol: string) => boolean;
   removeInstrument: (symbol: string) => boolean;
   updateInstrument: (symbol: string, updates: Partial<Instrument>) => void;
@@ -18,51 +15,47 @@ interface InstrumentStore {
   initialize: () => void;
 }
 
+// Вспомогательная функция для сохранения состояния
+const persistState = (state: InstrumentStore) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    instruments: state.instruments,
+    currentSymbol: state.currentSymbol,
+  }));
+};
+
 export const useInstrumentStore = create<InstrumentStore>((set, get) => ({
   instruments: [],
   currentSymbol: null,
 
   addInstrument: (symbol) => {
     const { instruments } = get();
-    
-    // Проверяем что такого инструмента ещё нет
+
     if (instruments.some((i) => i.symbol === symbol)) {
       return false;
     }
 
-    // Добавляем новый инструмент
     set((state) => ({
       instruments: [...state.instruments, createDefaultInstrument(symbol)],
     }));
 
-    // Сохраняем в localStorage
-    const updated = get();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-
+    persistState(get());
     return true;
   },
 
   removeInstrument: (symbol) => {
     const { instruments, currentSymbol } = get();
-
-    // Фильтруем инструмент
     const filtered = instruments.filter((i) => i.symbol !== symbol);
 
-    // Если ничего не изменилось - инструмент не найден
     if (filtered.length === instruments.length) {
       return false;
     }
 
-    // Обновляем состояние
     set({
       instruments: filtered,
       currentSymbol: currentSymbol === symbol ? null : currentSymbol,
     });
 
-    // Сохраняем в localStorage
-    const updated = get();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-
+    persistState(get());
     return true;
   },
 
@@ -73,17 +66,12 @@ export const useInstrumentStore = create<InstrumentStore>((set, get) => ({
       ),
     }));
 
-    // Сохраняем в localStorage
-    const updated = get();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    persistState(get());
   },
 
   selectInstrument: (symbol) => {
     set({ currentSymbol: symbol });
-
-    // Сохраняем в localStorage
-    const updated = get();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    persistState(get());
   },
 
   getInstrument: (symbol) => {
@@ -91,7 +79,6 @@ export const useInstrumentStore = create<InstrumentStore>((set, get) => ({
   },
 
   initialize: () => {
-    // Пытаемся загрузить из localStorage
     const stored = localStorage.getItem(STORAGE_KEY);
 
     if (stored) {
@@ -107,7 +94,6 @@ export const useInstrumentStore = create<InstrumentStore>((set, get) => ({
       }
     }
 
-    // Если не загрузилось - инициализируем пустое состояние
     set({
       instruments: [],
       currentSymbol: null,
