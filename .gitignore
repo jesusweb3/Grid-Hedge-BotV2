@@ -10,6 +10,7 @@ logs/
 
 # IDE / Editor
 /.vscode/
+/.idea/
 .idea/
 *.iml
 *.suo
