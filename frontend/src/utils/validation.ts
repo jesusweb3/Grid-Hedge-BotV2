@@ -24,20 +24,31 @@ const validatePairWithSum = (
   individualMax: number,
   maxSum: number
 ): [number, number] => {
-  const clamped1 = clamp(value1, individualMin, individualMax);
-  const clamped2 = clamp(value2, individualMin, individualMax);
+  let first = clamp(value1, individualMin, individualMax);
+  let second = clamp(value2, individualMin, individualMax);
 
-  const sum = clamped1 + clamped2;
+  const sum = first + second;
 
-  if (sum <= maxSum) {
-    return [clamped1, clamped2];
+  if (sum === maxSum) {
+    return [first, second];
+  }
+
+  if (sum < maxSum) {
+    if (changedFirst) {
+      second = clamp(maxSum - first, individualMin, individualMax);
+    } else {
+      first = clamp(maxSum - second, individualMin, individualMax);
+    }
+    return [first, second];
   }
 
   if (changedFirst) {
-    return [clamped1, clamp(maxSum - clamped1, individualMin, individualMax)];
+    second = clamp(maxSum - first, individualMin, individualMax);
+  } else {
+    first = clamp(maxSum - second, individualMin, individualMax);
   }
 
-  return [clamp(maxSum - clamped2, individualMin, individualMax), clamped2];
+  return [first, second];
 };
 
 /**

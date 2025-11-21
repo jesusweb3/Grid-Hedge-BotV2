@@ -28,6 +28,26 @@ function InstrumentCardComponent({ instrument }: InstrumentCardProps) {
     }
   }, [instrument?.symbol]);
 
+  const formatNumber = useCallback((value: number, decimals: number) => {
+    if (Number.isNaN(value)) {
+      return '';
+    }
+    if (decimals <= 0) {
+      return value.toString();
+    }
+    return value.toFixed(decimals);
+  }, []);
+
+  const applyUpdate = useCallback((updates: Partial<Instrument>) => {
+    if (!instrument) return;
+    void updateInstrument(instrument.symbol, updates).catch((error: unknown) => {
+      console.error('Failed to apply instrument update:', error);
+      const message =
+        error instanceof Error ? error.message : 'Не удалось обновить параметр. Попробуйте снова.';
+      setValidationError(message);
+    });
+  }, [instrument, updateInstrument]);
+
   const handleActivityToggle = useCallback((checked: boolean) => {
     if (!instrument) return;
     if (checked) {
@@ -37,8 +57,8 @@ function InstrumentCardComponent({ instrument }: InstrumentCardProps) {
         return;
       }
     }
-    updateInstrument(instrument.symbol, { isActive: checked });
-  }, [instrument, updateInstrument]);
+    applyUpdate({ isActive: checked });
+  }, [instrument, applyUpdate]);
 
   const makeFieldHandler = useCallback((field: keyof EditableFields) => ({
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,14 +67,14 @@ function InstrumentCardComponent({ instrument }: InstrumentCardProps) {
   }), []);
 
   const makeSimpleNumberBlur = useCallback(
-    (field: keyof EditableFields, updateFn: (value: number) => void) =>
+    (field: keyof EditableFields, decimals: number, updateFn: (value: number) => void) =>
       () => {
         const value = parseFloat(edits[field]) || 0;
         const positive = ensurePositive(value);
         updateFn(positive);
-        setEdits(prev => ({ ...prev, [field]: positive.toString() }));
+        setEdits(prev => ({ ...prev, [field]: formatNumber(positive, decimals) }));
       },
-    [edits]
+    [edits, formatNumber]
   );
 
   const makeTpVolumeBlur = useCallback(
@@ -67,7 +87,7 @@ function InstrumentCardComponent({ instrument }: InstrumentCardProps) {
       const newTpLevels = [...instrument.tpLevels];
       newTpLevels[0] = { ...newTpLevels[0], volumePercent: validTp1 };
       newTpLevels[1] = { ...newTpLevels[1], volumePercent: validTp2 };
-      updateInstrument(instrument.symbol, { tpLevels: newTpLevels as [any, any] });
+      applyUpdate({ tpLevels: newTpLevels as Instrument['tpLevels'] });
 
       setEdits(prev => ({
         ...prev,
@@ -75,7 +95,7 @@ function InstrumentCardComponent({ instrument }: InstrumentCardProps) {
         tp2Volume: validTp2.toString(),
       }));
     },
-    [instrument, edits, updateInstrument]
+    [instrument, edits, applyUpdate]
   );
 
   const makeSlCountBlur = useCallback(
@@ -85,7 +105,7 @@ function InstrumentCardComponent({ instrument }: InstrumentCardProps) {
       const shortCount = parseInt(edits.slShortCount) || 1;
       const [validLong, validShort] = validateSlCounts(longCount, shortCount, isLongCount);
 
-      updateInstrument(instrument.symbol, {
+      applyUpdate({
         slLong: { ...instrument.slLong, count: validLong },
         slShort: { ...instrument.slShort, count: validShort },
       });
@@ -96,71 +116,83 @@ function InstrumentCardComponent({ instrument }: InstrumentCardProps) {
         slShortCount: validShort.toString(),
       }));
     },
-    [instrument, edits, updateInstrument]
+    [instrument, edits, applyUpdate]
   );
 
   const memoizedHandlers = useMemo(() => {
     if (!instrument) return null;
     return {
-      handleEntryPriceBlur: makeSimpleNumberBlur('entryPrice', (value) => {
-        updateInstrument(instrument.symbol, { entryPriceUsdt: value });
+      handleEntryPriceBlur: makeSimpleNumberBlur('entryPrice', instrument.priceDecimals, (value) => {
+        applyUpdate({ entryPriceUsdt: value });
       }),
-      handleEntryVolumeBlur: makeSimpleNumberBlur('entryVolume', (value) => {
-        updateInstrument(instrument.symbol, { entryVolumeUsdt: value });
-      }),
-      handleTpStep1Blur: makeSimpleNumberBlur('tpStep1', (value) => {
+      handleEntryVolumeBlur: makeSimpleNumberBlur(
+        'entryVolume',
+        instrument.volumeDecimals,
+        (value) => {
+          applyUpdate({ entryVolumeUsdt: value });
+        },
+      ),
+      handleTpStep1Blur: makeSimpleNumberBlur('tpStep1', instrument.priceDecimals, (value) => {
         const newTpLevels = [...instrument.tpLevels];
         newTpLevels[0] = { ...newTpLevels[0], stepUsdt: value };
-        updateInstrument(instrument.symbol, { tpLevels: newTpLevels as [any, any] });
+        applyUpdate({ tpLevels: newTpLevels as Instrument['tpLevels'] });
       }),
-      handleTpStep2Blur: makeSimpleNumberBlur('tpStep2', (value) => {
+      handleTpStep2Blur: makeSimpleNumberBlur('tpStep2', instrument.priceDecimals, (value) => {
         const newTpLevels = [...instrument.tpLevels];
         newTpLevels[1] = { ...newTpLevels[1], stepUsdt: value };
-        updateInstrument(instrument.symbol, { tpLevels: newTpLevels as [any, any] });
+        applyUpdate({ tpLevels: newTpLevels as Instrument['tpLevels'] });
       }),
       handleTp1VolumeBlur: makeTpVolumeBlur(true),
       handleTp2VolumeBlur: makeTpVolumeBlur(false),
-      handleSlLongStepBlur: makeSimpleNumberBlur('slLongStep', (value) => {
-        updateInstrument(instrument.symbol, {
+      handleSlLongStepBlur: makeSimpleNumberBlur('slLongStep', instrument.priceDecimals, (value) => {
+        applyUpdate({
           slLong: { ...instrument.slLong, stepUsdt: value },
         });
       }),
-      handleSlShortStepBlur: makeSimpleNumberBlur('slShortStep', (value) => {
-        updateInstrument(instrument.symbol, {
+      handleSlShortStepBlur: makeSimpleNumberBlur('slShortStep', instrument.priceDecimals, (value) => {
+        applyUpdate({
           slShort: { ...instrument.slShort, stepUsdt: value },
         });
       }),
       handleSlLongCountBlur: makeSlCountBlur(true),
       handleSlShortCountBlur: makeSlCountBlur(false),
-      handleRefillLongPriceBlur: makeSimpleNumberBlur('refillLongPrice', (value) => {
-        updateInstrument(instrument.symbol, {
+      handleRefillLongPriceBlur: makeSimpleNumberBlur('refillLongPrice', instrument.priceDecimals, (value) => {
+        applyUpdate({
           refill: { ...instrument.refill, longPriceUsdt: value },
         });
       }),
-      handleRefillLongVolumeBlur: makeSimpleNumberBlur('refillLongVolume', (value) => {
-        updateInstrument(instrument.symbol, {
+      handleRefillLongVolumeBlur: makeSimpleNumberBlur(
+        'refillLongVolume',
+        instrument.volumeDecimals,
+        (value) => {
+          applyUpdate({
           refill: { ...instrument.refill, longVolumeUsdt: value },
         });
-      }),
-      handleRefillShortPriceBlur: makeSimpleNumberBlur('refillShortPrice', (value) => {
-        updateInstrument(instrument.symbol, {
+        },
+      ),
+      handleRefillShortPriceBlur: makeSimpleNumberBlur('refillShortPrice', instrument.priceDecimals, (value) => {
+        applyUpdate({
           refill: { ...instrument.refill, shortPriceUsdt: value },
         });
       }),
-      handleRefillShortVolumeBlur: makeSimpleNumberBlur('refillShortVolume', (value) => {
-        updateInstrument(instrument.symbol, {
+      handleRefillShortVolumeBlur: makeSimpleNumberBlur(
+        'refillShortVolume',
+        instrument.volumeDecimals,
+        (value) => {
+          applyUpdate({
           refill: { ...instrument.refill, shortVolumeUsdt: value },
         });
-      }),
+        },
+      ),
     };
-  }, [instrument, makeSimpleNumberBlur, makeTpVolumeBlur, makeSlCountBlur, updateInstrument]);
+  }, [instrument, makeSimpleNumberBlur, makeTpVolumeBlur, makeSlCountBlur, applyUpdate]);
 
   const handleRefillToggle = useCallback((checked: boolean) => {
     if (!instrument) return;
-    updateInstrument(instrument.symbol, {
+    applyUpdate({
       refill: { ...instrument.refill, enabled: checked },
     });
-  }, [instrument, updateInstrument]);
+  }, [instrument, applyUpdate]);
 
   if (!instrument) {
     return <div className="instrument-card empty">Выберите инструмент</div>;

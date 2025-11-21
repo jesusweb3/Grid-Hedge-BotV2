@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useInstrumentStore } from '../../stores/useInstrumentStore';
+import { useInstrumentStore, type AddInstrumentResult } from '../../stores/useInstrumentStore';
 import { InstrumentList } from '../widgets/InstrumentList';
 import { InstrumentCard } from '../widgets/InstrumentCard';
 import { AddInstrumentDialog } from '../dialogs/AddInstrumentDialog';
@@ -11,10 +11,15 @@ export function MainLayout() {
   const currentSymbol = useInstrumentStore((state) => state.currentSymbol);
   const selectInstrument = useInstrumentStore((state) => state.selectInstrument);
   const addInstrument = useInstrumentStore((state) => state.addInstrument);
+  const initialize = useInstrumentStore((state) => state.initialize);
 
   const currentInstrument = currentSymbol
     ? instruments.find((i) => i.symbol === currentSymbol) || null
     : null;
+
+  useEffect(() => {
+    void initialize();
+  }, [initialize]);
 
   useEffect(() => {
     if (instruments.length === 0) {
@@ -30,12 +35,13 @@ export function MainLayout() {
     }
   }, [instruments.length, currentSymbol, selectInstrument]);
 
-  const handleAddInstrument = (symbol: string) => {
-    const success = addInstrument(symbol);
-    if (success) {
-      selectInstrument(symbol);
+  const handleAddInstrument = async (symbol: string): Promise<AddInstrumentResult> => {
+    const result = await addInstrument(symbol);
+    if (result.success && result.instrument) {
+      selectInstrument(result.instrument.symbol);
       setIsDialogOpen(false);
     }
+    return result;
   };
 
   return (

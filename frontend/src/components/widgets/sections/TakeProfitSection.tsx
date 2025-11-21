@@ -34,7 +34,7 @@ function TakeProfitSectionComponent({
             value={edits.tpStep1}
             {...makeFieldHandler('tpStep1')}
             onBlur={handlers.handleTpStep1Blur}
-            step="0.01"
+            step={instrument.tickSize}
             disabled={instrument.isActive}
           />
         </div>
@@ -62,7 +62,7 @@ function TakeProfitSectionComponent({
             value={edits.tpStep2}
             {...makeFieldHandler('tpStep2')}
             onBlur={handlers.handleTpStep2Blur}
-            step="0.01"
+            step={instrument.tickSize}
             disabled={instrument.isActive}
           />
         </div>

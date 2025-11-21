@@ -6,7 +6,7 @@ function App() {
   const initialize = useInstrumentStore((state) => state.initialize);
 
   useEffect(() => {
-    initialize();
+    void initialize();
   }, [initialize]);
 
   return <MainLayout />;

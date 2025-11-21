@@ -58,7 +58,7 @@ function RefillSectionComponent({
               value={edits.refillLongVolume}
               {...makeFieldHandler('refillLongVolume')}
               onBlur={handlers.handleRefillLongVolumeBlur}
-              step="0.01"
+            step={instrument.qtyStep}
               disabled={instrument.isActive}
             />
           </div>
@@ -80,7 +80,7 @@ function RefillSectionComponent({
               value={edits.refillShortVolume}
               {...makeFieldHandler('refillShortVolume')}
               onBlur={handlers.handleRefillShortVolumeBlur}
-              step="0.01"
+            step={instrument.qtyStep}
               disabled={instrument.isActive}
             />
           </div>

@@ -1,24 +1,24 @@
 const { app, BrowserWindow, Menu } = require('electron');
 const path = require('path');
-const fs = require('fs');
 
 let mainWindow;
 
 function createWindow() {
+  const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
   mainWindow = new BrowserWindow({
-  width: 1200,
-  height: 830,
-  webPreferences: {
-    preload: path.join(__dirname, 'preload.js'),
-  },
-});
+    width: 1200,
+    height: 830,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+    },
+  });
 
-  const distPath = path.join(__dirname, '../frontend/dist/index.html');
-  const isDev = !fs.existsSync(distPath);
+  const prodIndexPath = path.join(__dirname, '../frontend/dist/index.html');
+  const devServerUrl = process.env.VITE_DEV_SERVER_URL || 'http://localhost:5173';
 
   const startUrl = isDev
-    ? 'http://localhost:5173'
-    : `file://${distPath}`;
+    ? devServerUrl
+    : `file://${prodIndexPath}`;
 
   mainWindow.loadURL(startUrl);
 

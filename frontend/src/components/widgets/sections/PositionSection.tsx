@@ -41,7 +41,7 @@ function PositionSectionComponent({
             value={edits.entryVolume}
             {...makeFieldHandler('entryVolume')}
             onBlur={handlers.handleEntryVolumeBlur}
-            step="0.01"
+            step={instrument.qtyStep}
             disabled={instrument.isActive}
           />
         </div>

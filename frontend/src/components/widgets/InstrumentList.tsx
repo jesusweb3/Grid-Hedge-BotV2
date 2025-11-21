@@ -24,10 +24,17 @@ export function InstrumentList({
   };
 
   const handleConfirmDelete = () => {
-    if (deleteConfirmSymbol) {
-      removeInstrument(deleteConfirmSymbol);
+    if (!deleteConfirmSymbol) return;
+
+    void removeInstrument(deleteConfirmSymbol).then((success) => {
+      if (!success) {
+        console.error('Failed to delete instrument:', deleteConfirmSymbol);
+      }
+    }).catch((error) => {
+      console.error('Failed to delete instrument:', error);
+    }).finally(() => {
       setDeleteConfirmSymbol(null);
-    }
+    });
   };
 
   return (

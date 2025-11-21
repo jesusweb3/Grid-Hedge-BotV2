@@ -26,7 +26,9 @@ export interface Instrument {
   entryPriceUsdt: number;
   entryVolumeUsdt: number;
   priceDecimals: number;
+  volumeDecimals: number;
   tickSize: number;
+  qtyStep: number;
   tpLevels: [TakeProfitLevel, TakeProfitLevel]; // Ровно 2 уровня
   slLong: StopLossConfig;
   slShort: StopLossConfig;

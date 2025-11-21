@@ -46,7 +46,7 @@ function StopLossSectionComponent({
             value={edits.slLongStep}
             {...makeFieldHandler('slLongStep')}
             onBlur={handlers.handleSlLongStepBlur}
-            step="0.01"
+            step={instrument.tickSize}
             disabled={instrument.isActive}
           />
         </div>
@@ -73,7 +73,7 @@ function StopLossSectionComponent({
             value={edits.slShortStep}
             {...makeFieldHandler('slShortStep')}
             onBlur={handlers.handleSlShortStepBlur}
-            step="0.01"
+            step={instrument.tickSize}
             disabled={instrument.isActive}
           />
         </div>

@@ -1,18 +1,31 @@
 import { useState } from 'react';
+import type { AddInstrumentResult } from '../../stores/useInstrumentStore';
 import { isValidSymbol } from '../../utils/validation';
 import './AddInstrumentDialog.css';
 
 interface AddInstrumentDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (symbol: string) => void;
+  onAdd: (symbol: string) => Promise<AddInstrumentResult>;
 }
 
 export function AddInstrumentDialog({ isOpen, onClose, onAdd }: AddInstrumentDialogProps) {
   const [symbol, setSymbol] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleAdd = () => {
+  const handleRequestClose = () => {
+    if (isSubmitting) {
+      return;
+    }
+    setSymbol('');
+    setError('');
+    onClose();
+  };
+
+  const handleAdd = async () => {
+    if (isSubmitting) return;
+
     const upperSymbol = symbol.toUpperCase().trim();
 
     if (!upperSymbol) {
@@ -25,25 +38,37 @@ export function AddInstrumentDialog({ isOpen, onClose, onAdd }: AddInstrumentDia
       return;
     }
 
-    onAdd(upperSymbol);
-    setSymbol('');
-    setError('');
-    onClose();
+    setIsSubmitting(true);
+    try {
+      const result = await onAdd(upperSymbol);
+      if (result.success) {
+        setSymbol('');
+        setError('');
+        onClose();
+      } else {
+        setError(result.error ?? 'Не удалось добавить инструмент');
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Не удалось добавить инструмент';
+      setError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleAdd();
+      void handleAdd();
     }
     if (e.key === 'Escape') {
-      onClose();
+      handleRequestClose();
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="dialog-overlay" onClick={onClose}>
+    <div className="dialog-overlay" onClick={handleRequestClose}>
       <div className="dialog-content" onClick={(e) => e.stopPropagation()}>
         <h2>Добавить инструмент</h2>
 
@@ -55,18 +80,19 @@ export function AddInstrumentDialog({ isOpen, onClose, onAdd }: AddInstrumentDia
             setSymbol(e.target.value);
             setError('');
           }}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyDown}
           autoFocus
+          disabled={isSubmitting}
         />
 
         {error && <p className="error-text">{error}</p>}
 
         <div className="dialog-buttons">
-          <button className="btn-cancel" onClick={onClose}>
+          <button className="btn-cancel" onClick={handleRequestClose} disabled={isSubmitting}>
             Отмена
           </button>
-          <button className="btn-add" onClick={handleAdd}>
-            Добавить
+          <button className="btn-add" onClick={handleAdd} disabled={isSubmitting}>
+            {isSubmitting ? 'Добавление...' : 'Добавить'}
           </button>
         </div>
       </div>
