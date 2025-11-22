@@ -1,6 +1,9 @@
 const { app, BrowserWindow, Menu } = require('electron');
 const path = require('path');
 
+const APP_TITLE = 'Grid-Hedge-Bot';
+app.setName(APP_TITLE);
+
 let mainWindow;
 
 function createWindow() {
@@ -8,6 +11,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 830,
+    title: APP_TITLE,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
