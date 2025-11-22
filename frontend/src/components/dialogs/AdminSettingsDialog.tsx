@@ -202,7 +202,7 @@ export function AdminSettingsDialog({ isOpen, onClose, onSettingsUpdated }: Admi
               </div>
             </div>
 
-            <div className="admin-settings__field">
+            <div className="admin-settings__field secret-field">
               <label className="admin-settings__label">Secret Key</label>
               <div className="admin-settings__input-wrapper">
                 <input
