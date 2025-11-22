@@ -13,6 +13,7 @@ from app.models.instrument import (
     TakeProfitLevel,
 )
 from app.services.bybit_specs import spec_registry
+from app.services.state_storage import state_storage
 
 
 def _default_take_profit() -> list[TakeProfitLevel]:
@@ -64,6 +65,9 @@ class InstrumentStore:
         self._instruments: Dict[str, Instrument] = {}
         self._lock = asyncio.Lock()
 
+    async def _persist(self) -> None:
+        await state_storage.save_instruments(list(self._instruments.values()))
+
     async def list(self) -> list[Instrument]:
         async with self._lock:
             return [instrument for instrument in self._instruments.values()]
@@ -84,6 +88,7 @@ class InstrumentStore:
 
             instrument = _create_instrument_from_spec(symbol, raw_spec)
             self._instruments[symbol] = instrument
+            await self._persist()
             return instrument
 
     async def delete(self, symbol: str) -> None:
@@ -91,6 +96,7 @@ class InstrumentStore:
             symbol = symbol.upper()
             if symbol in self._instruments:
                 del self._instruments[symbol]
+                await self._persist()
 
     async def update(self, symbol: str, updates: InstrumentUpdate) -> Instrument:
         symbol = symbol.upper()
@@ -104,11 +110,13 @@ class InstrumentStore:
             base_payload.update(update_data)
             updated = Instrument(**base_payload)
             self._instruments[symbol] = updated
+            await self._persist()
             return updated
 
     async def replace_all(self, instruments: Iterable[Instrument]) -> None:
         async with self._lock:
             self._instruments = {instrument.symbol: instrument for instrument in instruments}
+            await self._persist()
 
 
 instrument_store = InstrumentStore()

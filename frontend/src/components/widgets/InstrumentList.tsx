@@ -6,13 +6,17 @@ import './InstrumentList.css';
 interface InstrumentListProps {
   onSelectSymbol: (symbol: string) => void;
   onAddClick: () => void;
+  onOpenSettings: () => void;
   currentSymbol: string | null;
+  settingsConfigured: boolean;
 }
 
 export function InstrumentList({
   onSelectSymbol,
   onAddClick,
+  onOpenSettings,
   currentSymbol,
+  settingsConfigured,
 }: InstrumentListProps) {
   const [deleteConfirmSymbol, setDeleteConfirmSymbol] = useState<string | null>(null);
   const instruments = useInstrumentStore((state) => state.instruments);
@@ -39,9 +43,11 @@ export function InstrumentList({
 
   return (
     <div className="instrument-list">
-      <button className="btn-add-instrument" onClick={onAddClick}>
-        + Добавить инструмент
-      </button>
+      <div className="action-buttons">
+        <button className="btn-add-instrument" onClick={onAddClick}>
+          + Добавить инструмент
+        </button>
+      </div>
 
       <div className="list-container">
         {instruments.length === 0 ? (
@@ -72,6 +78,13 @@ export function InstrumentList({
             ))}
           </ul>
         )}
+      </div>
+
+      <div className="settings-footer">
+        <button className="btn-settings" onClick={onOpenSettings}>
+          <span>⚙ Настроить API ключи</span>
+          <span className={`settings-status ${settingsConfigured ? 'active' : 'inactive'}`} />
+        </button>
       </div>
 
       <DeleteConfirmDialog

@@ -3,10 +3,14 @@ import { useInstrumentStore, type AddInstrumentResult } from '../../stores/useIn
 import { InstrumentList } from '../widgets/InstrumentList';
 import { InstrumentCard } from '../widgets/InstrumentCard';
 import { AddInstrumentDialog } from '../dialogs/AddInstrumentDialog';
+import { AdminSettingsDialog } from '../dialogs/AdminSettingsDialog';
+import { apiClient } from '../../utils/apiClient';
 import './MainLayout.css';
 
 export function MainLayout() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settingsConfigured, setSettingsConfigured] = useState(false);
   const instruments = useInstrumentStore((state) => state.instruments);
   const currentSymbol = useInstrumentStore((state) => state.currentSymbol);
   const selectInstrument = useInstrumentStore((state) => state.selectInstrument);
@@ -20,6 +24,30 @@ export function MainLayout() {
   useEffect(() => {
     void initialize();
   }, [initialize]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadStatus = async () => {
+      try {
+        const status = await apiClient.getSettingsStatus();
+        if (isMounted) {
+          setSettingsConfigured(Boolean(status.configured));
+        }
+      } catch (error) {
+        console.error('Failed to fetch settings status:', error);
+        if (isMounted) {
+          setSettingsConfigured(false);
+        }
+      }
+    };
+
+    void loadStatus();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (instruments.length === 0) {
@@ -49,7 +77,9 @@ export function MainLayout() {
       <InstrumentList
         onSelectSymbol={selectInstrument}
         onAddClick={() => setIsDialogOpen(true)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
         currentSymbol={currentSymbol}
+        settingsConfigured={settingsConfigured}
       />
 
       <div className="card-container">
@@ -60,6 +90,11 @@ export function MainLayout() {
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         onAdd={handleAddInstrument}
+      />
+      <AdminSettingsDialog
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        onSettingsUpdated={setSettingsConfigured}
       />
     </div>
   );

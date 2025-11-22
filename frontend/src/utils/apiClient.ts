@@ -1,5 +1,11 @@
 import type { Instrument } from '../types/instrument';
 import type { SymbolSpec } from '../types/spec';
+import type {
+  ApiSettings,
+  SettingsAuthorizeResponse,
+  SettingsStatus,
+  SettingsUpdateRequest,
+} from '../types/settings';
 
 const DEFAULT_BASE_URL = 'http://127.0.0.1:8000/api';
 const API_BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? DEFAULT_BASE_URL;
@@ -54,6 +60,15 @@ const post = async <T>(path: string, body: unknown): Promise<T> => {
   return handleResponse<T>(response);
 };
 
+const put = async <T>(path: string, body: unknown): Promise<T> => {
+  const response = await fetch(buildUrl(path), {
+    method: 'PUT',
+    headers: defaultHeaders,
+    body: JSON.stringify(body),
+  });
+  return handleResponse<T>(response);
+};
+
 const patch = async <T>(path: string, body: unknown): Promise<T> => {
   const response = await fetch(buildUrl(path), {
     method: 'PATCH',
@@ -80,5 +95,10 @@ export const apiClient = {
     patch<Instrument>(`/instruments/${encodeURIComponent(symbol)}`, updates),
   deleteInstrument: (symbol: string): Promise<void> =>
     remove(`/instruments/${encodeURIComponent(symbol)}`),
+  getSettingsStatus: (): Promise<SettingsStatus> => get<SettingsStatus>('/settings/status'),
+  authorizeSettings: (password: string): Promise<SettingsAuthorizeResponse> =>
+    post<ApiSettings>('/settings/authorize', { password }),
+  updateSettings: (payload: SettingsUpdateRequest): Promise<ApiSettings> =>
+    put<ApiSettings>('/settings/', payload),
 };
 

@@ -1,0 +1,102 @@
+.admin-settings {
+  width: 90%;
+  max-width: 420px;
+  padding: 22px 24px;
+}
+
+.admin-settings__description {
+  margin: 0 0 16px 0;
+  font-size: 0.9rem;
+  color: #bbbbbb;
+}
+
+.admin-settings__field {
+  margin-bottom: 16px;
+}
+
+.admin-settings__label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+  color: #e0e0e0;
+}
+
+.admin-settings__input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.admin-settings__input-wrapper input {
+  width: 100%;
+  height: 44px;
+  padding: 0 48px 0 16px;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  border: 1px solid #555555;
+  background-color: #1f1f1f;
+  color: #f5f5f5;
+  line-height: 1.2;
+  box-sizing: border-box;
+}
+
+.admin-settings__input-wrapper input:focus {
+  outline: 2px solid #0f6bff;
+  border-color: #0f6bff;
+}
+
+.admin-settings__toggle-visibility {
+  position: absolute;
+  top: 11px;
+  right: 14px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: inherit;
+  transition: opacity 0.2s;
+  opacity: 0.75;
+}
+
+.admin-settings__toggle-visibility:hover,
+.admin-settings__toggle-visibility:focus {
+  opacity: 1;
+}
+
+.admin-settings__toggle-visibility svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.admin-settings__hint {
+  margin: 8px 0 14px 0;
+  font-size: 0.85rem;
+  color: #bbbbbb;
+}
+
+.admin-settings__success {
+  margin: 0 0 12px 0;
+  font-size: 0.85rem;
+  color: #4cb050;
+}
+
+.admin-settings .dialog-buttons {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+}
+
+.admin-settings .dialog-buttons .btn-cancel,
+.admin-settings .dialog-buttons .btn-add {
+  min-width: 120px;
+  justify-content: center;
+}
+
+
+

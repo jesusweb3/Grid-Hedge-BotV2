@@ -1,17 +1,12 @@
 from __future__ import annotations
 
 import asyncio
-import os
 from typing import Dict, Optional
 
 from dotenv import load_dotenv
 from pybit.unified_trading import HTTP
 
-from app.core.config import get_settings
-
-
-def _str_to_bool(value: Optional[str]) -> bool:
-    return (value or "").strip().lower() in {"1", "true", "yes", "y", "on"}
+from app.services.settings_service import settings_service
 
 
 class SpecRegistry:
@@ -34,12 +29,16 @@ class SpecRegistry:
     @staticmethod
     def _load_specs() -> Dict[str, Dict[str, str]]:
         load_dotenv()
-        settings = get_settings()
+        stored = settings_service.current()
 
-        env_flag = os.getenv("BYBIT_TESTNET")
-        testnet = _str_to_bool(env_flag) if env_flag is not None else settings.bybit_testnet
+        credentials: Dict[str, str] = {}
+        api_key = stored.bybit_api_key.strip()
+        api_secret = stored.bybit_secret_key.strip()
+        if api_key and api_secret:
+            credentials["api_key"] = api_key
+            credentials["api_secret"] = api_secret
 
-        client = HTTP(testnet=testnet, timeout=10_000, recv_window=5_000)
+        client = HTTP(testnet=False, timeout=10_000, recv_window=5_000, **credentials)
 
         specs: Dict[str, Dict[str, str]] = {}
         cursor: Optional[str] = None
