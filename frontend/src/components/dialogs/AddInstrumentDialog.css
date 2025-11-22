@@ -15,7 +15,7 @@
   background-color: #2b2b2b;
   border: 1px solid #555555;
   border-radius: 8px;
-  padding: 20px;
+  padding: 24px;
   width: 85%;
   max-width: 380px;
   max-height: 85vh;
@@ -70,6 +70,7 @@
   cursor: pointer;
   font-size: 0.95rem;
   transition: background-color 0.2s;
+  min-width: 110px;
 }
 
 .btn-cancel:hover {
@@ -83,4 +84,11 @@
 
 .btn-add:hover {
   background-color: #005fa3;
+}
+
+.disabled-message {
+  margin: 0 0 20px 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: #bbbbbb;
 }

@@ -7,9 +7,19 @@ interface AddInstrumentDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onAdd: (symbol: string) => Promise<AddInstrumentResult>;
+  onRequestSettings?: () => void;
+  disabled?: boolean;
+  disabledMessage?: string;
 }
 
-export function AddInstrumentDialog({ isOpen, onClose, onAdd }: AddInstrumentDialogProps) {
+export function AddInstrumentDialog({
+  isOpen,
+  onClose,
+  onAdd,
+  onRequestSettings,
+  disabled = false,
+  disabledMessage = 'Сначала настройте API ключи, затем добавьте инструмент.',
+}: AddInstrumentDialogProps) {
   const [symbol, setSymbol] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,7 +34,7 @@ export function AddInstrumentDialog({ isOpen, onClose, onAdd }: AddInstrumentDia
   };
 
   const handleAdd = async () => {
-    if (isSubmitting) return;
+    if (isSubmitting || disabled) return;
 
     const upperSymbol = symbol.toUpperCase().trim();
 
@@ -57,6 +67,9 @@ export function AddInstrumentDialog({ isOpen, onClose, onAdd }: AddInstrumentDia
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (disabled) {
+      return;
+    }
     if (e.key === 'Enter') {
       void handleAdd();
     }
@@ -72,27 +85,35 @@ export function AddInstrumentDialog({ isOpen, onClose, onAdd }: AddInstrumentDia
       <div className="dialog-content" onClick={(e) => e.stopPropagation()}>
         <h2>Добавить инструмент</h2>
 
-        <input
-          type="text"
-          placeholder="Например, BTCUSDT"
-          value={symbol}
-          onChange={(e) => {
-            setSymbol(e.target.value);
-            setError('');
-          }}
-          onKeyDown={handleKeyDown}
-          autoFocus
-          disabled={isSubmitting}
-        />
+        {disabled ? (
+          <p className="disabled-message">{disabledMessage}</p>
+        ) : (
+          <input
+            type="text"
+            placeholder="Например, BTCUSDT"
+            value={symbol}
+            onChange={(e) => {
+              setSymbol(e.target.value);
+              setError('');
+            }}
+            onKeyDown={handleKeyDown}
+            autoFocus
+            disabled={isSubmitting}
+          />
+        )}
 
-        {error && <p className="error-text">{error}</p>}
+        {error && !disabled && <p className="error-text">{error}</p>}
 
         <div className="dialog-buttons">
           <button className="btn-cancel" onClick={handleRequestClose} disabled={isSubmitting}>
-            Отмена
+            Закрыть
           </button>
-          <button className="btn-add" onClick={handleAdd} disabled={isSubmitting}>
-            {isSubmitting ? 'Добавление...' : 'Добавить'}
+          <button
+            className="btn-add"
+            onClick={disabled ? onRequestSettings : handleAdd}
+            disabled={isSubmitting || (disabled && !onRequestSettings)}
+          >
+            {disabled ? 'Настроить ключи' : isSubmitting ? 'Добавление...' : 'Добавить'}
           </button>
         </div>
       </div>

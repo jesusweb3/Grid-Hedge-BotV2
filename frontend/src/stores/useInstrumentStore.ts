@@ -21,6 +21,7 @@ interface InstrumentStore {
   updateInstrument: (symbol: string, updates: Partial<Instrument>) => Promise<void>;
   selectInstrument: (symbol: string | null) => void;
   getInstrument: (symbol: string) => Instrument | undefined;
+  deactivateAll: () => Promise<void>;
 }
 
 const parseError = (error: unknown): string => {
@@ -231,5 +232,38 @@ export const useInstrumentStore = create<InstrumentStore>((set, get) => ({
 
   getInstrument: (symbol) => {
     return get().instruments.find((instrument) => instrument.symbol === symbol);
+  },
+
+  deactivateAll: async () => {
+    const active = get().instruments.filter((instrument) => instrument.isActive);
+    if (active.length === 0) {
+      return;
+    }
+
+    const results = await Promise.allSettled(
+      active.map((instrument) => apiClient.updateInstrument(instrument.symbol, { isActive: false })),
+    );
+
+    const updatedMap = new Map<string, Instrument>();
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        updatedMap.set(active[index].symbol, normalizeInstrument(result.value));
+      } else {
+        console.error('Failed to deactivate instrument:', active[index].symbol, result.reason);
+      }
+    });
+
+    set((state) => ({
+      instruments: state.instruments.map((instrument) => {
+        const replacement = updatedMap.get(instrument.symbol);
+        if (replacement) {
+          return replacement;
+        }
+        if (instrument.isActive) {
+          return { ...instrument, isActive: false };
+        }
+        return instrument;
+      }),
+    }));
   },
 }));

@@ -37,7 +37,16 @@
   width: 100%;
 }
 
-.btn-add-instrument:hover,
+.btn-add-instrument.disabled {
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.btn-add-instrument.disabled:hover {
+  background-color: #3c3c3c;
+}
+
+.btn-add-instrument:not(.disabled):hover,
 .btn-settings:hover {
   background-color: #454545;
 }

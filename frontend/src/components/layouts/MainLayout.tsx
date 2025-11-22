@@ -16,6 +16,7 @@ export function MainLayout() {
   const selectInstrument = useInstrumentStore((state) => state.selectInstrument);
   const addInstrument = useInstrumentStore((state) => state.addInstrument);
   const initialize = useInstrumentStore((state) => state.initialize);
+  const deactivateAll = useInstrumentStore((state) => state.deactivateAll);
 
   const currentInstrument = currentSymbol
     ? instruments.find((i) => i.symbol === currentSymbol) || null
@@ -63,6 +64,12 @@ export function MainLayout() {
     }
   }, [instruments.length, currentSymbol, selectInstrument]);
 
+  useEffect(() => {
+    if (!settingsConfigured) {
+      void deactivateAll();
+    }
+  }, [settingsConfigured, deactivateAll]);
+
   const handleAddInstrument = async (symbol: string): Promise<AddInstrumentResult> => {
     const result = await addInstrument(symbol);
     if (result.success && result.instrument) {
@@ -83,13 +90,18 @@ export function MainLayout() {
       />
 
       <div className="card-container">
-        <InstrumentCard instrument={currentInstrument} />
+        <InstrumentCard instrument={currentInstrument} settingsConfigured={settingsConfigured} />
       </div>
 
       <AddInstrumentDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         onAdd={handleAddInstrument}
+        onRequestSettings={() => {
+          setIsDialogOpen(false);
+          setIsSettingsOpen(true);
+        }}
+        disabled={!settingsConfigured}
       />
       <AdminSettingsDialog
         isOpen={isSettingsOpen}

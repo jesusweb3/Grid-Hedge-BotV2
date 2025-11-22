@@ -22,6 +22,10 @@ export function InstrumentList({
   const instruments = useInstrumentStore((state) => state.instruments);
   const removeInstrument = useInstrumentStore((state) => state.removeInstrument);
 
+  const handleAddClick = () => {
+    onAddClick();
+  };
+
   const handleDelete = (e: React.MouseEvent, symbol: string) => {
     e.stopPropagation();
     setDeleteConfirmSymbol(symbol);
@@ -44,7 +48,11 @@ export function InstrumentList({
   return (
     <div className="instrument-list">
       <div className="action-buttons">
-        <button className="btn-add-instrument" onClick={onAddClick}>
+        <button
+          className={`btn-add-instrument ${settingsConfigured ? '' : 'disabled'}`.trim()}
+          onClick={handleAddClick}
+          title={settingsConfigured ? '' : 'Сначала настройте API ключи'}
+        >
           + Добавить инструмент
         </button>
       </div>

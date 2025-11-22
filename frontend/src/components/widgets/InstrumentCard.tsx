@@ -13,9 +13,10 @@ import './InstrumentCard.css';
 
 interface InstrumentCardProps {
   instrument: Instrument | null;
+  settingsConfigured: boolean;
 }
 
-function InstrumentCardComponent({ instrument }: InstrumentCardProps) {
+function InstrumentCardComponent({ instrument, settingsConfigured }: InstrumentCardProps) {
   const updateInstrument = useInstrumentStore((state) => state.updateInstrument);
   const [edits, setEdits] = useState<EditableFields>(resetEdits());
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -51,6 +52,10 @@ function InstrumentCardComponent({ instrument }: InstrumentCardProps) {
   const handleActivityToggle = useCallback((checked: boolean) => {
     if (!instrument) return;
     if (checked) {
+      if (!settingsConfigured) {
+        setValidationError('Настройте API ключи, прежде чем запускать торговлю.');
+        return;
+      }
       const validation = validateInstrumentBeforeStart(instrument);
       if (!validation.valid) {
         setValidationError(validation.message || 'Ошибка валидации');
@@ -58,7 +63,7 @@ function InstrumentCardComponent({ instrument }: InstrumentCardProps) {
       }
     }
     applyUpdate({ isActive: checked });
-  }, [instrument, applyUpdate]);
+  }, [instrument, applyUpdate, settingsConfigured]);
 
   const makeFieldHandler = useCallback((field: keyof EditableFields) => ({
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -209,7 +214,7 @@ function InstrumentCardComponent({ instrument }: InstrumentCardProps) {
         <ToggleSwitch
           checked={instrument.isActive}
           onChange={handleActivityToggle}
-          disabled={false}
+          disabled={!settingsConfigured && !instrument.isActive}
         />
       </div>
 
